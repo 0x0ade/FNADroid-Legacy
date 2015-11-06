@@ -1,0 +1,13 @@
+# Eclipse output folder #
+bin
+
+# IntelliJ output stuff #
+out
+obj
+gen
+
+# Mac OSX files #
+.DS_Store
+
+# IntelliJ folder #
+.idea
