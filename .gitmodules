@@ -1,0 +1,3 @@
+[submodule "jni/mojoshader"]
+	path = jni/mojoshader
+	url = git@github.com:flibitijibibo/MojoShader.git
