@@ -129,7 +129,7 @@ void onResume() {
 }
 
 void onStop() {
-    //mono_jit_cleanup(domain);
+    mono_jit_cleanup(domain);
 }
 
 #ifndef _Included_com_angelde_fnadroid_FNADroidWrapper
