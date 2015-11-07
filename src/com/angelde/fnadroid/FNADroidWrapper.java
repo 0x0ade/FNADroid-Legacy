@@ -18,13 +18,13 @@ public class FNADroidWrapper {
         //basic dependencies: FNA
         System.loadLibrary("openal");
         System.loadLibrary("SDL2");
-        //System.loadLibrary("mojoshader");
+        System.loadLibrary("mojoshader");
         //basic dependencies: Mono and the wrapper
         System.loadLibrary("monosgen-2.0");
         System.loadLibrary("fnadroid-wrapper");
         //add your custom dependencies here; obligatory FEZ example
-        //System.loadLibrary("ogg");
-        //System.loadLibrary("vorbis");
+        System.loadLibrary("ogg");
+        System.loadLibrary("vorbis");
         //System.loadLibrary("vorbisfile");
     }
 
