@@ -1,16 +1,8 @@
 LOCAL_PATH := $(call my-dir)
 
 #Import libraries from libs-games folder
-#ADD YOUR LIBRARIES HERE.. or not, if you're lucky enough and mono dyn. loads them
-include $(CLEAR_VARS)
-LOCAL_MODULE := ogg
-LOCAL_SRC_FILES := libs-game/libogg.so
-include $(PREBUILT_SHARED_LIBRARY)
-
-include $(CLEAR_VARS)
-LOCAL_MODULE := vorbis
-LOCAL_SRC_FILES := libs-game/libvorbis.so
-include $(PREBUILT_SHARED_LIBRARY)
+#ADD YOUR LIBRARIES HERE
+#or not, if you're lucky enough and mono dynamically loads them
 
 #Compile MojoShader
 include $(CLEAR_VARS)
@@ -46,6 +38,16 @@ LOCAL_MODULE := openal
 LOCAL_SRC_FILES := libs/libopenal.so
 include $(PREBUILT_SHARED_LIBRARY)
 
+include $(CLEAR_VARS)
+LOCAL_MODULE := ogg
+LOCAL_SRC_FILES := libs/libogg.so
+include $(PREBUILT_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := vorbis
+LOCAL_SRC_FILES := libs/libvorbis.so
+include $(PREBUILT_SHARED_LIBRARY)
+
 #Compile fnadroid-wrapper
 include $(CLEAR_VARS)
 TARGET_PLATFORM := 18
@@ -53,7 +55,7 @@ LOCAL_MODULE    := fnadroid-wrapper
 LOCAL_SRC_FILES := fnadroid-wrapper.cpp
 LOCAL_LDLIBS    := -llog -landroid -lEGL -lGLESv2 -Wl,-rpath,/sdcard/Android/data/com.angelde.fnadroid/mono/lib -Wl,--export-dynamic -lm -ldl
 LOCAL_STATIC_LIBRARIES := android_native_app_glue
-LOCAL_SHARED_LIBRARIES := openal SDL2 monosgen-2.0
+LOCAL_SHARED_LIBRARIES := vorbis openal SDL2 monosgen-2.0
 LOCAL_CFLAGS += -I/sdcard/Android/data/com.angelde.fnadroid/mono/include/mono-2.0 -I../sdl/include -Ijni/include -D_REENTRANT
 include $(BUILD_SHARED_LIBRARY)
 

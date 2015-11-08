@@ -25,9 +25,6 @@
 #include <SDL_main.h>
 #include <SDL.h>
 
-#include <AL/al.h>
-#include <AL/alc.h>
-
 #define  LOG_TAG    "fnadroid-wrapper"
 #define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
 #define  LOGW(...)  __android_log_print(ANDROID_LOG_WARN,LOG_TAG,__VA_ARGS__)
@@ -64,7 +61,7 @@ int SDL_main(int argc, char* argv[]) {
     chdir(fnadir);
 
     mono_config_parse(NULL);
-    mono_trace_set_level_string("debug");
+    //mono_trace_set_level_string("debug");
     domain = mono_jit_init_version("fnadroid-domain", "v4.0.30319");
 
     mono_thread_attach(domain);
