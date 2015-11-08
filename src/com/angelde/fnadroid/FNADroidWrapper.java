@@ -25,7 +25,7 @@ public class FNADroidWrapper {
         //add your custom dependencies here; obligatory FEZ example
         System.loadLibrary("ogg");
         System.loadLibrary("vorbis");
-        //System.loadLibrary("vorbisfile");
+        //System.loadLibrary("vorbisfile"); //enc and file already included in precompiled vorbis
     }
 
     public static WrapperActivity context;

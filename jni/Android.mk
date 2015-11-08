@@ -27,8 +27,7 @@ LOCAL_CFLAGS += -Ijni/mojoshader/GL \
     -DSUPPORT_PROFILE_D3D=0 \
     -DSUPPORT_PROFILE_BYTECODE=0 \
     -DSUPPORT_PROFILE_ARB1=0 \
-    -DSUPPORT_PROFILE_ARB1_NV=0 \
-    -DSUPPORT_PROFILE_GLSLES
+    -DSUPPORT_PROFILE_ARB1_NV=0
 include $(BUILD_SHARED_LIBRARY)
 
 #Import libraries from libs folder
@@ -47,19 +46,14 @@ LOCAL_MODULE := openal
 LOCAL_SRC_FILES := libs/libopenal.so
 include $(PREBUILT_SHARED_LIBRARY)
 
-include $(CLEAR_VARS)
-LOCAL_MODULE := openal_static
-LOCAL_SRC_FILES := libs/libopenal.a
-include $(PREBUILT_STATIC_LIBRARY)
-
 #Compile fnadroid-wrapper
 include $(CLEAR_VARS)
 TARGET_PLATFORM := 18
 LOCAL_MODULE    := fnadroid-wrapper
 LOCAL_SRC_FILES := fnadroid-wrapper.cpp
 LOCAL_LDLIBS    := -llog -landroid -lEGL -lGLESv2 -Wl,-rpath,/sdcard/Android/data/com.angelde.fnadroid/mono/lib -Wl,--export-dynamic -lm -ldl
-LOCAL_STATIC_LIBRARIES := android_native_app_glue openal_static
-LOCAL_SHARED_LIBRARIES := SDL2 monosgen-2.0
+LOCAL_STATIC_LIBRARIES := android_native_app_glue
+LOCAL_SHARED_LIBRARIES := openal SDL2 monosgen-2.0
 LOCAL_CFLAGS += -I/sdcard/Android/data/com.angelde.fnadroid/mono/include/mono-2.0 -I../sdl/include -Ijni/include -D_REENTRANT
 include $(BUILD_SHARED_LIBRARY)
 

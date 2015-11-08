@@ -61,24 +61,10 @@ void showDebug(char* msg) {
 }
 
 int SDL_main(int argc, char* argv[]) {
-    ALCdevice* device = 0;
-    ALCcontext* context = 0;
-    const ALint context_attribs[] = {ALC_FREQUENCY, 22050, 0};
-
-    device = alcOpenDevice(0);
-    context = alcCreateContext(device, context_attribs);
-    alcMakeContextCurrent(context);
-
-    LOGI("Devices: %s", alcGetString(0, ALC_ALL_DEVICES_SPECIFIER));
-
-    alcMakeContextCurrent(0);
-    alcDestroyContext(context);
-    alcCloseDevice(device);
-
     chdir(fnadir);
 
     mono_config_parse(NULL);
-    //mono_trace_set_level_string("debug");
+    mono_trace_set_level_string("debug");
     domain = mono_jit_init_version("fnadroid-domain", "v4.0.30319");
 
     mono_thread_attach(domain);
