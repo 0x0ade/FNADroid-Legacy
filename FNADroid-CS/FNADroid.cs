@@ -3,6 +3,8 @@ using System.Runtime.InteropServices;
 
 public static class FNADroid {
     
+    //Fun fact: The mono documentation (MonoDoc?) promotes the use of __Internal.
+    //__Internal causes a DllNotFoundException..?!
     private const string nativeLibName = "fnadroid-wrapper";
     
     [DllImport(nativeLibName)]
