@@ -1,5 +1,7 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 
 public static class FNADroid {
     
@@ -27,12 +29,34 @@ public static class FNADroid {
     
     public static void Boot() {
         Console.WriteLine("Hello, World.. wherever this goes.");
-        PrintInfo("Hello Info!");
-        PrintWarn("Hello Warn!");
-        PrintError("Hello Error!");
-        Popup("Hello Popup Title!", "Hello Popup Message!");
-        PopupDebug("Hello Debug!");
-        PopupError("Hello Error Again!");
+        
+        Console.SetOut(new LogcatWriter() {
+            OnWrite = PrintInfo
+        });
+        
+        Console.SetError(new LogcatWriter() {
+            OnWrite = PrintError
+        });
+        
+        Console.WriteLine("Hello, Logcat!");
     }
     
+}
+
+public class LogcatWriter : TextWriter {
+    public override Encoding Encoding {
+        get {
+            return Encoding.UTF8;
+        }
+    }
+    
+    public Action<string> OnWrite;
+
+    public override void Write(string value) {
+        if (OnWrite != null) {
+            OnWrite(value);
+        }
+        base.Write(value);
+    }
+
 }
