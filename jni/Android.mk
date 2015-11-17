@@ -52,7 +52,7 @@ include $(PREBUILT_SHARED_LIBRARY)
 include $(CLEAR_VARS)
 TARGET_PLATFORM := 18
 LOCAL_MODULE    := fnadroid-wrapper
-LOCAL_SRC_FILES := fnadroid-wrapper.cpp
+LOCAL_SRC_FILES := fnadroid-wrapper.cpp SDL_android_main.c
 LOCAL_LDLIBS    := -llog -landroid -lEGL -lGLESv2 -Wl,-rpath,/sdcard/Android/data/com.angelde.fnadroid/mono/lib -Wl,--export-dynamic -lm -ldl
 LOCAL_STATIC_LIBRARIES := android_native_app_glue
 LOCAL_SHARED_LIBRARIES := vorbis openal SDL2 monosgen-2.0

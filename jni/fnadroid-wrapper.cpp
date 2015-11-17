@@ -1,14 +1,11 @@
+#include "fnadroid-wrapper.h"
+
 #include <jni.h>
 #include <errno.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
-#include <EGL/egl.h>
-#include <GLES/gl.h>
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
 
 #include <android/sensor.h>
 #include <android/log.h>
@@ -25,23 +22,27 @@
 #include <SDL_main.h>
 #include <SDL.h>
 
-#define  LOG_TAG    "fnadroid-wrapper"
-#define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
-#define  LOGW(...)  __android_log_print(ANDROID_LOG_WARN,LOG_TAG,__VA_ARGS__)
-#define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
+//cpp to j
 
-//mono side
-MonoDomain* domain;
-MonoAssembly* assembly;
-MonoImage* mscorlib;
+void showMsg(const char* title, const char* msg) {
+    jstring jsTitle = jnienv->NewStringUTF(title);
+    jstring jsMsg = jnienv->NewStringUTF(msg);
+    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
+    jmethodID showMsgID = jnienv->GetStaticMethodID(clazz, "showMsg", "(Ljava/lang/String;Ljava/lang/String;)V");
+    jnienv->CallStaticVoidMethod(clazz, showMsgID, jsTitle, jsMsg);
+    jnienv->DeleteLocalRef(jsTitle);
+    jnienv->DeleteLocalRef(jsMsg);
+}
 
-//java side
-JNIEnv* jnienv;
+void showDebug(const char* msg) {
+    jstring jsMsg = jnienv->NewStringUTF(msg);
+    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
+    jmethodID showMsgID = jnienv->GetStaticMethodID(clazz, "showDebug", "(Ljava/lang/String;)V");
+    jnienv->CallStaticVoidMethod(clazz, showMsgID, jsMsg);
+    jnienv->DeleteLocalRef(jsMsg);
+}
 
-//bridge / wrapper config
-char* fnadir = "/sdcard/Android/data/com.angelde.fnadroid/files/game";
-
-void showError(char* msg) {
+void showError(const char* msg) {
     jstring jsMsg = jnienv->NewStringUTF(msg);
     jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
     jmethodID showMsgID = jnienv->GetStaticMethodID(clazz, "showError", "(Ljava/lang/String;)V");
@@ -49,13 +50,7 @@ void showError(char* msg) {
     jnienv->DeleteLocalRef(jsMsg);
 }
 
-void showDebug(char* msg) {
-    jstring jsMsg = jnienv->NewStringUTF(msg);
-    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
-    jmethodID showMsgID = jnienv->GetStaticMethodID(clazz, "showDebug", "(Ljava/lang/String;)V");
-    jnienv->CallStaticVoidMethod(clazz, showMsgID, jsMsg);
-    jnienv->DeleteLocalRef(jsMsg);
-}
+//main embedded mono code
 
 int SDL_main(int argc, char* argv[]) {
     chdir(fnadir);
@@ -80,6 +75,22 @@ int SDL_main(int argc, char* argv[]) {
         return -1;
     }
 
+    fnadroid = mono_domain_assembly_open(domain, "FNADroid.dll");
+    if (fnadroid) {
+        //FNADroid.dll is a helper assembly containing helper code.
+        //Games and FNADroid itself should not rely on it, but it's helpful in some cases.
+        //For example, early versions of the mono binaries delivered with FNADroid fail to
+        //pipe STDOUT (Console.Out) to logcat.
+        fnadroidi = mono_assembly_get_image(fnadroid);
+        MonoMethodDesc* runDesc = mono_method_desc_new("FNADroid.FNADroid:Boot()", true);
+        MonoMethod* run = mono_method_desc_search_in_image(runDesc, fnadroidi);
+        if (run) {
+            mono_runtime_invoke(run, NULL, NULL, NULL);
+        } else {
+            showDebug("FNADroid.dll found, but not Boot()");
+        }
+    }
+
     assembly = mono_domain_assembly_open(domain, "game.exe");
     if (!assembly) {
         LOGE("Assembly could not be loaded!");
@@ -94,10 +105,13 @@ int SDL_main(int argc, char* argv[]) {
         return -1;
     }
 
-    int argc_ = 1;
-    char* argv_[] = {"--android"};
-    mono_jit_exec(domain, assembly, argc_, argv_);
+    char *argv_[2];
+    argv_[0] = strdup("--android");
+    argv_[1] = NULL;
+    mono_jit_exec(domain, assembly, 1, argv_);
 }
+
+//java activity and helper methods
 
 void onCreate() {
 }
@@ -141,6 +155,8 @@ JNIEXPORT void JNICALL Java_com_angelde_fnadroid_FNADroidWrapper_onStop(JNIEnv* 
 	onStop();
 }
 
+//j to c
+
 JNIEXPORT void JNICALL Java_com_angelde_fnadroid_FNADroidWrapper_setMonoDirs(JNIEnv* env, jclass cls, jstring jsLib, jstring jsEtc) {
     const char* lib = env->GetStringUTFChars(jsLib, 0);
     const char* etc = env->GetStringUTFChars(jsEtc, 0);
@@ -159,60 +175,33 @@ JNIEXPORT void JNICALL Java_com_angelde_fnadroid_FNADroidWrapper_setGameDir(JNIE
     env->ReleaseStringUTFChars(jsTo, to);
 }
 
+//m to c
+
+void PrintInfo(const char* msg) {
+    __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "%s", msg);
+}
+
+void PrintWarn(const char* msg) {
+    __android_log_print(ANDROID_LOG_WARN, LOG_TAG, "%s", msg);
+}
+
+void PrintError(const char* msg) {
+    __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "%s", msg);
+}
+
+void Popup(const char* title, const char* msg) {
+    showMsg(title, msg);
+}
+
+void PopupDebug(const char* msg) {
+    showDebug(msg);
+}
+
+void PopupError(const char* msg) {
+    showError(msg);
+}
+
 #ifdef __cplusplus
 }
 #endif
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-//BEGIN SDL_android_main.c
-/*
-    SDL_android_main.c, placed in the public domain by Sam Lantinga  3/13/14
-*/
-//#include "../src/SDL_internal.h"
-
-#ifdef __ANDROID__
-
-/* Include the SDL main definition header */
-//#include "SDL_main.h"
-
-/*******************************************************************************
-                 Functions called by JNI
-*******************************************************************************/
-//#include <jni.h>
-
-/* Called before SDL_main() to initialize JNI bindings in SDL library */
-extern void SDL_Android_Init(JNIEnv* env, jclass cls);
-
-/* Start up the SDL app */
-void Java_org_libsdl_app_SDLActivity_nativeInit(JNIEnv* env, jclass cls, jobject obj)
-{
-    //CUSTOM START
-    //Make the environment public
-    jnienv = env;
-    //CUSTOM END
-    /* This interface could expand with ABI negotiation, calbacks, etc. */
-    SDL_Android_Init(env, cls);
-
-    SDL_SetMainReady();
-
-    /* Run the application code! */
-    int status;
-    char *argv[2];
-    argv[0] = SDL_strdup("SDL_app");
-    argv[1] = NULL;
-    status = SDL_main(1, argv);
-
-    /* Do not issue an exit or the whole application will terminate instead of just the SDL thread */
-    /* exit(status); */
-}
-
-#endif /* __ANDROID__ */
-
-/* vi: set ts=4 sw=4 expandtab: */
-//END SDL_android_main.c
-#ifdef __cplusplus
-}
 #endif

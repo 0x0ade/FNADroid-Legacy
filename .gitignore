@@ -11,3 +11,8 @@ gen
 
 # IntelliJ folder #
 .idea
+
+#FNADroid-CS
+FNADroid-CS/bin
+FNADroid-CS/out
+FNADroid-CS/*.userprefs

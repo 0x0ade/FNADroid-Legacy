@@ -51,15 +51,16 @@ public class FNADroidWrapper {
         context.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                alert[0] = new AlertDialog.Builder(context).create();
-                alert[0].setTitle(title);
-                alert[0].setMessage(msg);
-                alert[0].setButton(AlertDialog.BUTTON_NEUTRAL, "OK", new DialogInterface.OnClickListener() {
+                final AlertDialog alert_ = new AlertDialog.Builder(context).create();
+                alert_.setTitle(title);
+                alert_.setMessage(msg);
+                alert_.setButton(AlertDialog.BUTTON_NEUTRAL, "OK", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        alert[0].dismiss();
+                        alert_.dismiss();
                     }
                 });
-                alert[0].show();
+                alert_.show();
+                alert[0] = alert_;
             }
         });
         //showMsg is called from the native thread; keep it hanging
