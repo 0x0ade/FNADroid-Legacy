@@ -1,0 +1,102 @@
+//FIXME update to ndk 10e+
+/*
+#include "fnadroid-wrapper.h"
+
+#include <jni.h>
+#include <errno.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#include <android/sensor.h>
+#include <android/log.h>
+
+#include <mono/jit/jit.h>
+#include <mono/metadata/assembly.h>
+#include <mono/metadata/mono-config.h>
+#include <mono/metadata/threads.h>
+#include <mono/metadata/debug-helpers.h>
+#include <mono/utils/mono-logger.h>
+*/
+
+//cpp to j
+
+void showMsg(const char* title, const char* msg) {
+    jstring jsTitle = jnienv->NewStringUTF(title);
+    jstring jsMsg = jnienv->NewStringUTF(msg);
+    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
+    jmethodID showMsgID = jnienv->GetStaticMethodID(clazz, "showMsg", "(Ljava/lang/String;Ljava/lang/String;)V");
+    jnienv->CallStaticVoidMethod(clazz, showMsgID, jsTitle, jsMsg);
+    jnienv->DeleteLocalRef(jsTitle);
+    jnienv->DeleteLocalRef(jsMsg);
+}
+void showDebug(const char* msg) {
+    jstring jsMsg = jnienv->NewStringUTF(msg);
+    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
+    jmethodID showMsgID = jnienv->GetStaticMethodID(clazz, "showDebug", "(Ljava/lang/String;)V");
+    jnienv->CallStaticVoidMethod(clazz, showMsgID, jsMsg);
+    jnienv->DeleteLocalRef(jsMsg);
+}
+void showError(const char* msg) {
+    jstring jsMsg = jnienv->NewStringUTF(msg);
+    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
+    jmethodID showMsgID = jnienv->GetStaticMethodID(clazz, "showError", "(Ljava/lang/String;)V");
+    jnienv->CallStaticVoidMethod(clazz, showMsgID, jsMsg);
+    jnienv->DeleteLocalRef(jsMsg);
+}
+
+void vibrationCancel() {
+    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
+    jmethodID mID = jnienv->GetStaticMethodID(clazz, "vibrationCancel", "()V");
+    jnienv->CallStaticVoidMethod(clazz, mID);
+}
+bool vibrationAvailable() {
+    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
+    jmethodID mID = jnienv->GetStaticMethodID(clazz, "vibrationAvailable", "()Z");
+    return (bool) jnienv->CallStaticBooleanMethod(clazz, mID); //returns jboolean, which is a bool
+}
+void vibrate(long long milliseconds) {
+    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
+    jmethodID mID = jnienv->GetStaticMethodID(clazz, "vibrate", "(J)V");
+    jnienv->CallStaticVoidMethod(clazz, mID, (jlong) milliseconds);
+}
+
+//m to c
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void PrintInfo(const char* msg) {
+    __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "%s", msg);
+}
+void PrintWarn(const char* msg) {
+    __android_log_print(ANDROID_LOG_WARN, LOG_TAG, "%s", msg);
+}
+void PrintError(const char* msg) {
+    __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "%s", msg);
+}
+
+void Popup(const char* title, const char* msg) {
+    showMsg(title, msg);
+}
+void PopupDebug(const char* msg) {
+    showDebug(msg);
+}
+void PopupError(const char* msg) {
+    showError(msg);
+}
+
+void VibrationCancel() {
+    vibrationCancel();
+}
+bool VibrationAvailable() {
+    return vibrationAvailable();
+}
+void Vibrate(long long milliseconds) {
+    vibrate(milliseconds);
+}
+
+#ifdef __cplusplus
+}
+#endif

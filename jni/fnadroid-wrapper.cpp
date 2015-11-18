@@ -21,34 +21,6 @@
 #include <SDL_main.h>
 #include <SDL.h>
 
-//cpp to j
-
-void showMsg(const char* title, const char* msg) {
-    jstring jsTitle = jnienv->NewStringUTF(title);
-    jstring jsMsg = jnienv->NewStringUTF(msg);
-    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
-    jmethodID showMsgID = jnienv->GetStaticMethodID(clazz, "showMsg", "(Ljava/lang/String;Ljava/lang/String;)V");
-    jnienv->CallStaticVoidMethod(clazz, showMsgID, jsTitle, jsMsg);
-    jnienv->DeleteLocalRef(jsTitle);
-    jnienv->DeleteLocalRef(jsMsg);
-}
-
-void showDebug(const char* msg) {
-    jstring jsMsg = jnienv->NewStringUTF(msg);
-    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
-    jmethodID showMsgID = jnienv->GetStaticMethodID(clazz, "showDebug", "(Ljava/lang/String;)V");
-    jnienv->CallStaticVoidMethod(clazz, showMsgID, jsMsg);
-    jnienv->DeleteLocalRef(jsMsg);
-}
-
-void showError(const char* msg) {
-    jstring jsMsg = jnienv->NewStringUTF(msg);
-    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
-    jmethodID showMsgID = jnienv->GetStaticMethodID(clazz, "showError", "(Ljava/lang/String;)V");
-    jnienv->CallStaticVoidMethod(clazz, showMsgID, jsMsg);
-    jnienv->DeleteLocalRef(jsMsg);
-}
-
 //main embedded mono code
 
 int SDL_main(int argc, char* argv[]) {
@@ -63,14 +35,6 @@ int SDL_main(int argc, char* argv[]) {
     mscorlib = mono_get_corlib();
     if (!mscorlib) {
         LOGE("mscorlib could not be loaded!");
-        char buf[2048];
-        strcpy(buf, "mscorlib could not be loaded!\nGame path: ");
-        strcat(buf, fnadir);
-        strcat(buf, "\nCurrent directory: ");
-        char cwd[1024];
-        getcwd(cwd, sizeof(cwd));
-        strcat(buf, cwd);
-        showError(buf);
         return -1;
     }
 
@@ -93,14 +57,6 @@ int SDL_main(int argc, char* argv[]) {
     assembly = mono_domain_assembly_open(domain, "game.exe");
     if (!assembly) {
         LOGE("Assembly could not be loaded!");
-        char buf[2048];
-        strcpy(buf, "Assembly could not be loaded!\nGame path: ");
-        strcat(buf, fnadir);
-        strcat(buf, "\nCurrent directory: ");
-        char cwd[1024];
-        getcwd(cwd, sizeof(cwd));
-        strcat(buf, cwd);
-        showError(buf);
         return -1;
     }
 
@@ -174,33 +130,10 @@ JNIEXPORT void JNICALL Java_com_angelde_fnadroid_FNADroidWrapper_setGameDir(JNIE
     env->ReleaseStringUTFChars(jsTo, to);
 }
 
-//m to c
-
-void PrintInfo(const char* msg) {
-    __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "%s", msg);
-}
-
-void PrintWarn(const char* msg) {
-    __android_log_print(ANDROID_LOG_WARN, LOG_TAG, "%s", msg);
-}
-
-void PrintError(const char* msg) {
-    __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "%s", msg);
-}
-
-void Popup(const char* title, const char* msg) {
-    showMsg(title, msg);
-}
-
-void PopupDebug(const char* msg) {
-    showDebug(msg);
-}
-
-void PopupError(const char* msg) {
-    showError(msg);
-}
-
 #ifdef __cplusplus
 }
 #endif
 #endif
+
+//FIXME update to ndk 10e+
+#include "fnadroid-glue.cpp"
