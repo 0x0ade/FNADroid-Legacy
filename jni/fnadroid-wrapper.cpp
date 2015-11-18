@@ -86,7 +86,7 @@ int SDL_main(int argc, char* argv[]) {
         if (run) {
             mono_runtime_invoke(run, NULL, NULL, NULL);
         } else {
-            showDebug("FNADroid-CS.dll found, but not Boot()");
+            LOGI("FNADroid-CS.dll found, but not Boot()");
         }
     }
 
