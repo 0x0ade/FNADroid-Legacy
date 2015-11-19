@@ -26,6 +26,13 @@ public static class FNADroid {
     public static extern void PopupError(string msg);
     
     [DllImport(nativeLibName)]
+    public static extern string GetMainObbPath();
+    [DllImport(nativeLibName)]
+    public static extern string GetPatchObbPath();
+    [DllImport(nativeLibName)]
+    public static extern bool CanGLES3();
+    
+    [DllImport(nativeLibName)]
     public static extern void VibrationCancel();
     [DllImport(nativeLibName)]
     public static extern bool VibrationAvailable();
@@ -45,14 +52,27 @@ public static class FNADroid {
         
         Console.WriteLine("Hello, Logcat!");
         
-        PopupDebug("Vibration available: " + VibrationAvailable());
+        //TODO get home from Java
+        Environment.SetEnvironmentVariable("HOME", "./");
         
-        Vibrate(1000L);
-        PopupDebug("Vibrating for 1s");
+        //Allow games / FNA(?) to check for this environment variable.
+        Environment.SetEnvironmentVariable("FNADROID_ENABLED", "1");
         
-        Vibrate(30000L);
-        PopupDebug("Vibration for 30s or cancel");
-        VibrationCancel();
+        //Check for GLES3 and use a GLES3 context instead if possile (custom built / new enough).
+        if (CanGLES3()) {
+            PopupDebug("This device supports GLES3+. Asking FNA to use it...");
+            Environment.SetEnvironmentVariable("FNA_FORCE_ES3", "1");
+        } else {
+            PopupDebug("This device supports GLES2. FNA already uses this on Android.");
+        }
+        
+        //Force FNA to read the content from the ZIP (main OBB) if possible (custom built / new enough).
+        Environment.SetEnvironmentVariable("FNA_FORCE_CONTENT_ZIP", GetMainObbPath());
+        PopupDebug("OBB paths:\nMain: " + GetMainObbPath() + "\nPatch: " + GetPatchObbPath());
+        
+        //Unzip patch OBB if available and version differs
+        string obbPatchPath = GetPatchObbPath();
+        //TODO
     }
     
 }

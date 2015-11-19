@@ -1,8 +1,10 @@
 package com.angelde.fnadroid;
 
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Vibrator;
@@ -12,6 +14,10 @@ import android.widget.Toast;
 import java.io.File;
 
 public class FNADroidWrapper {
+
+    //modify these for your obb versions
+    public final static int OBB_VERSION_MAIN = 1;
+    public final static int OBB_VERSION_PATCH = 1;
 
     private FNADroidWrapper() {
     }
@@ -58,6 +64,13 @@ public class FNADroidWrapper {
         return path.replace("/storage/emulated/0", "/sdcard");
     }
 
+    public static String getObbPath(String obb, int version) {
+        File file = new File(Environment.getExternalStorageDirectory() + "/Android/obb/" + context.getPackageName());
+        file = new File(file, obb + "." + version + "." + context.getPackageName() + ".obb");
+        //TODO check if we've downloaded the file / the app comes from the play store, otherwise return appropiately
+        return fixPath(file.getAbsolutePath());
+    }
+
     //j to cpp
     public native static void onCreate();
     public native static void onStart();
@@ -101,14 +114,22 @@ public class FNADroidWrapper {
         }
     }
 
+    public static String getMainObbPath() {
+        return getObbPath("main", OBB_VERSION_MAIN);
+    }
+    public static String getPatchObbPath() {
+        return getObbPath("patch", OBB_VERSION_PATCH);
+    }
+    public static boolean canGLES3() {
+        return ((ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE)).getDeviceConfigurationInfo().reqGlEsVersion >= 0x30000;
+    }
+
     public static void vibrationCancel() {
         ((Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE)).cancel();
     }
-
     public static boolean vibrationAvailable() {
         return ((Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE)).hasVibrator();
     }
-
     public static void vibrate(long milliseconds) {
         ((Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE)).vibrate(milliseconds);
     }

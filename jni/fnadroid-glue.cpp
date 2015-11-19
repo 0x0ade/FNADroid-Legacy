@@ -46,6 +46,30 @@ void showError(const char* msg) {
     jnienv->DeleteLocalRef(jsMsg);
 }
 
+char* getMainObbPath() {
+    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
+    jmethodID mID = jnienv->GetStaticMethodID(clazz, "getMainObbPath", "()Ljava/lang/String;");
+    jstring jsVal = (jstring) jnienv->CallStaticObjectMethod(clazz, mID);
+    const char* val = jnienv->GetStringUTFChars(jsVal, 0);
+    char* valdup = strdup(val); //TODO is that duplication required?!
+    jnienv->ReleaseStringUTFChars(jsVal, val);
+    return valdup;
+}
+char* getPatchObbPath() {
+    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
+    jmethodID mID = jnienv->GetStaticMethodID(clazz, "getPatchObbPath", "()Ljava/lang/String;");
+    jstring jsVal = (jstring) jnienv->CallStaticObjectMethod(clazz, mID);
+    const char* val = jnienv->GetStringUTFChars(jsVal, 0);
+    char* valdup = strdup(val); //TODO is that duplication required?!
+    jnienv->ReleaseStringUTFChars(jsVal, val);
+    return valdup;
+}
+bool canGLES3() {
+    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
+    jmethodID mID = jnienv->GetStaticMethodID(clazz, "canGLES3", "()Z");
+    return (bool) jnienv->CallStaticBooleanMethod(clazz, mID);
+}
+
 void vibrationCancel() {
     jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
     jmethodID mID = jnienv->GetStaticMethodID(clazz, "vibrationCancel", "()V");
@@ -54,7 +78,7 @@ void vibrationCancel() {
 bool vibrationAvailable() {
     jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
     jmethodID mID = jnienv->GetStaticMethodID(clazz, "vibrationAvailable", "()Z");
-    return (bool) jnienv->CallStaticBooleanMethod(clazz, mID); //returns jboolean, which is a bool
+    return (bool) jnienv->CallStaticBooleanMethod(clazz, mID);
 }
 void vibrate(long long milliseconds) {
     jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
@@ -85,6 +109,16 @@ void PopupDebug(const char* msg) {
 }
 void PopupError(const char* msg) {
     showError(msg);
+}
+
+char* GetMainObbPath() {
+    return getMainObbPath();
+}
+char* GetPatchObbPath() {
+    return getPatchObbPath();
+}
+bool CanGLES3() {
+    return canGLES3();
 }
 
 void VibrationCancel() {
