@@ -27,5 +27,6 @@ JNIEnv* jnienv;
 
 //bridge / wrapper config
 char* fnadir;
+char* homedir;
 
 #endif

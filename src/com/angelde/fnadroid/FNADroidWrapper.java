@@ -48,16 +48,19 @@ public class FNADroidWrapper {
             dir = dir.getParentFile();
         }
         File monodir = new File(dir, "mono");
-        monodir.mkdirs();
         File gamedir = new File(dir, "game");
+        File homedir = new File(dir, "home");
+
+        monodir.mkdirs();
         gamedir.mkdirs();
-        new File(dir, "home").mkdirs();
+        homedir.mkdirs();
 
         Log.i("FNADroid", "Setting Mono dir to " + monodir.getAbsolutePath());
         setMonoDirs(fixPath(new File(monodir, "lib").getAbsolutePath()), fixPath(new File(monodir, "etc").getAbsolutePath()));
         Log.i("FNADroid", "Setting game dir to " + gamedir.getAbsolutePath());
         setGameDir(fixPath(gamedir.getAbsolutePath()));
-        //TODO also set the other dirs ("fake" home)
+        Log.i("FNADroid", "Setting home dir to " + homedir.getAbsolutePath());
+        setHomeDir(fixPath(homedir.getAbsolutePath()));
     }
 
     public static String fixPath(String path) {
@@ -67,7 +70,7 @@ public class FNADroidWrapper {
     public static String getObbPath(String obb, int version) {
         File file = new File(Environment.getExternalStorageDirectory() + "/Android/obb/" + context.getPackageName());
         file = new File(file, obb + "." + version + "." + context.getPackageName() + ".obb");
-        //TODO check if we've downloaded the file / the app comes from the play store, otherwise return appropiately
+        //TODO check if we've downloaded the file / the app comes from the play store, otherwise return appropriately
         return fixPath(file.getAbsolutePath());
     }
 
@@ -79,6 +82,7 @@ public class FNADroidWrapper {
     public native static void onStop();
     public native static void setMonoDirs(String lib, String etc);
     public native static void setGameDir(String to);
+    public native static void setHomeDir(String to);
 
     //cpp to j
     public static void showDebug(final String msg) {

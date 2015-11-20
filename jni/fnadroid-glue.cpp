@@ -46,6 +46,9 @@ void showError(const char* msg) {
     jnienv->DeleteLocalRef(jsMsg);
 }
 
+char* getHomePath() {
+    return homedir;
+}
 char* getMainObbPath() {
     jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
     jmethodID mID = jnienv->GetStaticMethodID(clazz, "getMainObbPath", "()Ljava/lang/String;");
@@ -111,6 +114,9 @@ void PopupError(const char* msg) {
     showError(msg);
 }
 
+char* GetHomePath() {
+    return getHomePath();
+}
 char* GetMainObbPath() {
     return getMainObbPath();
 }

@@ -27,7 +27,6 @@ int SDL_main(int argc, char* argv[]) {
     chdir(fnadir);
 
     mono_config_parse(NULL);
-    //mono_trace_set_level_string("debug");
     domain = mono_jit_init_version("fnadroid-domain", "v4.0.30319");
 
     mono_thread_attach(domain);
@@ -126,6 +125,14 @@ JNIEXPORT void JNICALL Java_com_angelde_fnadroid_FNADroidWrapper_setGameDir(JNIE
     const char* to = env->GetStringUTFChars(jsTo, 0);
 
     fnadir = strdup(to);
+
+    env->ReleaseStringUTFChars(jsTo, to);
+}
+
+JNIEXPORT void JNICALL Java_com_angelde_fnadroid_FNADroidWrapper_setHomeDir(JNIEnv* env, jclass cls, jstring jsTo) {
+    const char* to = env->GetStringUTFChars(jsTo, 0);
+
+    homedir = strdup(to);
 
     env->ReleaseStringUTFChars(jsTo, to);
 }
