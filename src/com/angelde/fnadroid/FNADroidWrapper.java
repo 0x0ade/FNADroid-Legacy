@@ -16,9 +16,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.Closeable;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
@@ -168,6 +166,7 @@ public class FNADroidWrapper {
         ((Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE)).vibrate(milliseconds);
     }
 
+    private static byte[] obbBuffer = new byte[2048];
     public static void extractObb(String path) {
         File dir = context.getExternalFilesDir(null);
         if (dir.getName().equals("files")) {
@@ -234,19 +233,59 @@ public class FNADroidWrapper {
                     size = entry.getSize() / progressScale;
                 }
                 final long fsize = size;
+                final int fprogressScale = progressScale;
 
                 context.runOnUiThread(new Runnable() {
                     public void run() {
                         name[0].setText(findex + " / " + count + ": " + entry.getName());
+                        progress[0].setProgress(0);
                         progress[0].setMax((int) fsize);
                     }
                 });
 
-                try {
-                    Thread.sleep(1000l);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                //TODO check for mono file
+                File out = new File(gamedir, entry.getName());
+
+                if (entry.isDirectory()) {
+                    out.mkdirs();
+                    continue;
                 }
+
+                if (out.exists()) {
+                    //TODO compare size / something
+                    out.delete();
+                }
+                out.createNewFile();
+
+                InputStream is = null;
+                FileOutputStream fos = null;
+
+                try {
+                    is = zip.getInputStream(entry);
+                    fos = new FileOutputStream(out);
+
+                    final long[] readCompletely = {0, 0};
+                    int read;
+                    while ((read = is.read(obbBuffer)) != -1) {
+                        fos.write(obbBuffer, 0, read);
+                        readCompletely[0] += read;
+                        if (readCompletely[1] == 0) {
+                            readCompletely[1] = 1;
+                            context.runOnUiThread(new Runnable() {
+                                public void run() {
+                                    progress[0].setProgress((int) (readCompletely[0] / fprogressScale));
+                                    readCompletely[1] = 0;
+                                }
+                            });
+                        }
+                    }
+                } catch (IOException e_) {
+                    throw e_;
+                } finally {
+                    closeSilently(is);
+                    closeSilently(fos);
+                }
+
 
                 index++;
             }
@@ -255,6 +294,8 @@ public class FNADroidWrapper {
         } finally {
             closeSilently(zip);
         }
+
+        alert[0].cancel();
 
     }
 
