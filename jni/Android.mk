@@ -6,7 +6,8 @@ LOCAL_PATH := $(call my-dir)
 
 #Compile MojoShader
 include $(CLEAR_VARS)
-TARGET_PLATFORM := 18
+TARGET_PLATFORM := 14
+TARGET_ARCH_ABI := armeabi-v7a
 LOCAL_MODULE    := mojoshader
 LOCAL_SRC_FILES := mojoshader/mojoshader.c mojoshader/mojoshader_common.c mojoshader/mojoshader_effects.c mojoshader/mojoshader_opengl.c
 LOCAL_LDLIBS    := -landroid -lEGL -lGLESv2 -lm -ldl
@@ -26,31 +27,37 @@ include $(BUILD_SHARED_LIBRARY)
 include $(CLEAR_VARS)
 LOCAL_MODULE := monosgen-2.0
 LOCAL_SRC_FILES := libs/libmonosgen-2.0.so
+TARGET_ARCH_ABI := armeabi-v7a
 include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := SDL2
 LOCAL_SRC_FILES := libs/libSDL2.so
+TARGET_ARCH_ABI := armeabi-v7a
 include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := openal
 LOCAL_SRC_FILES := libs/libopenal.so
+TARGET_ARCH_ABI := armeabi-v7a
 include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := ogg
 LOCAL_SRC_FILES := libs/libogg.so
+TARGET_ARCH_ABI := armeabi-v7a
 include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := vorbis
 LOCAL_SRC_FILES := libs/libvorbis.so
+TARGET_ARCH_ABI := armeabi-v7a
 include $(PREBUILT_SHARED_LIBRARY)
 
 #Compile fnadroid-wrapper
 include $(CLEAR_VARS)
-TARGET_PLATFORM := 18
+TARGET_PLATFORM := 14
+TARGET_ARCH_ABI := armeabi-v7a
 LOCAL_MODULE    := fnadroid-wrapper
 #FIXME update to ndk 10e+ and add fnadroid-glue.cpp back
 LOCAL_SRC_FILES := fnadroid-wrapper.cpp SDL_android_main.c

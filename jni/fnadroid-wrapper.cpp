@@ -40,9 +40,6 @@ int SDL_main(int argc, char* argv[]) {
     fnadroid = mono_domain_assembly_open(domain, "FNADroid-CS.dll");
     if (fnadroid) {
         //FNADroid-CS.dll is a helper assembly containing helper code.
-        //Games and FNADroid itself should not rely on it, but it's helpful in some cases.
-        //For example, early versions of the mono binaries delivered with FNADroid fail to
-        //pipe STDOUT (Console.Out) to logcat.
         fnadroidi = mono_assembly_get_image(fnadroid);
         MonoMethodDesc* runDesc = mono_method_desc_new("FNADroid:Boot()", true);
         MonoMethod* run = mono_method_desc_search_in_image(runDesc, fnadroidi);

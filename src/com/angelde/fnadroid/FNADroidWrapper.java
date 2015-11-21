@@ -9,9 +9,20 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Vibrator;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.Closeable;
 import java.io.File;
+import java.io.IOException;
+import java.util.Enumeration;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
 
 public class FNADroidWrapper {
 
@@ -39,11 +50,8 @@ public class FNADroidWrapper {
     public static WrapperActivity context;
 
     //Java-side helpers
-    public static void setMonoDirsAuto() {
+    public static void boot() {
         File dir = context.getExternalFilesDir(null);
-        if (dir == null) {
-            return;
-        }
         if (dir.getName().equals("files")) {
             dir = dir.getParentFile();
         }
@@ -54,6 +62,8 @@ public class FNADroidWrapper {
         monodir.mkdirs();
         gamedir.mkdirs();
         homedir.mkdirs();
+
+        //TODO put FNADroid-CS.dll to gamedir, mono to monodir
 
         Log.i("FNADroid", "Setting Mono dir to " + monodir.getAbsolutePath());
         setMonoDirs(fixPath(new File(monodir, "lib").getAbsolutePath()), fixPath(new File(monodir, "etc").getAbsolutePath()));
@@ -74,15 +84,25 @@ public class FNADroidWrapper {
         return fixPath(file.getAbsolutePath());
     }
 
+    public static void closeSilently(Closeable closeable) {
+        if (closeable == null) {
+            return;
+        }
+        try {
+            closeable.close();
+        } catch (Exception e) {
+        }
+    }
+
     //j to cpp
     public native static void onCreate();
     public native static void onStart();
     public native static void onPause();
     public native static void onResume();
     public native static void onStop();
-    public native static void setMonoDirs(String lib, String etc);
-    public native static void setGameDir(String to);
-    public native static void setHomeDir(String to);
+    private native static void setMonoDirs(String lib, String etc);
+    private native static void setGameDir(String to);
+    private native static void setHomeDir(String to);
 
     //cpp to j
     public static void showDebug(final String msg) {
@@ -118,11 +138,21 @@ public class FNADroidWrapper {
         }
     }
 
+    public static String getPackageName() {
+        return context.getPackageName();
+    }
+    public static String getDataPath() {
+        return context.getApplicationInfo().dataDir;
+    }
     public static String getMainObbPath() {
         return getObbPath("main", OBB_VERSION_MAIN);
     }
     public static String getPatchObbPath() {
         return getObbPath("patch", OBB_VERSION_PATCH);
+    }
+    public static String getInstallerPackageName() {
+        String s = context.getPackageManager().getInstallerPackageName(context.getPackageName());
+        return s == null ? "unknown" : s;
     }
     public static boolean canGLES3() {
         return ((ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE)).getDeviceConfigurationInfo().reqGlEsVersion >= 0x30000;
@@ -136,6 +166,96 @@ public class FNADroidWrapper {
     }
     public static void vibrate(long milliseconds) {
         ((Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE)).vibrate(milliseconds);
+    }
+
+    public static void extractObb(String path) {
+        File dir = context.getExternalFilesDir(null);
+        if (dir.getName().equals("files")) {
+            dir = dir.getParentFile();
+        }
+        File gamedir = new File(dir, "game");
+        File obb = new File(path);
+
+        String[] split = obb.getName().split("\\.");
+        String type = split[0];
+        int version = Integer.parseInt(split[1]);
+
+        final LinearLayout[] layout = {null};
+        final TextView[] name = {null};
+        final AlertDialog[] alert = {null};
+        final ProgressBar[] progress = {null};
+        context.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                layout[0] = new LinearLayout(context);
+                layout[0].setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
+                layout[0].setOrientation(LinearLayout.VERTICAL);
+                layout[0].setPadding(32, 16, 32, 16);
+                layout[0].addView(name[0] = new TextView(context));
+                name[0].setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
+                layout[0].addView(progress[0] = new ProgressBar(context, null, android.R.attr.progressBarStyleHorizontal));
+                progress[0].setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
+                progress[0].setIndeterminate(false);
+
+                final AlertDialog alert_ = new AlertDialog.Builder(context).create();
+                alert_.setView(layout[0]);
+                alert_.setCancelable(false);
+                alert_.setCanceledOnTouchOutside(false);
+                alert_.show();
+
+                alert[0] = alert_;
+            }
+        });
+
+        //this is called from the native thread; keep it hanging
+        while (alert[0] == null) {
+            try {
+                Thread.sleep(100L);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        ZipFile zip = null;
+        try {
+            zip = new ZipFile(obb);
+            final int count = zip.size();
+            int index = 0;
+            for (Enumeration<? extends ZipEntry> entries = zip.entries(); entries.hasMoreElements();) {
+                final ZipEntry entry = entries.nextElement();
+                final int findex = index;
+
+                Log.i("FNADroid", "Extracting " + index + " / " + count + ": " + entry.getName());
+
+                long size = entry.getSize();
+                int progressScale = 1;
+                while (size > Integer.MAX_VALUE) {
+                    progressScale *= 10;
+                    size = entry.getSize() / progressScale;
+                }
+                final long fsize = size;
+
+                context.runOnUiThread(new Runnable() {
+                    public void run() {
+                        name[0].setText(findex + " / " + count + ": " + entry.getName());
+                        progress[0].setMax((int) fsize);
+                    }
+                });
+
+                try {
+                    Thread.sleep(1000l);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                index++;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            closeSilently(zip);
+        }
+
     }
 
 }

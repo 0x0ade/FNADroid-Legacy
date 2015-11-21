@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -26,11 +27,19 @@ public static class FNADroid {
     public static extern void PopupError(string msg);
     
     [DllImport(nativeLibName)]
+    public static extern string GetGamePath();
+    [DllImport(nativeLibName)]
     public static extern string GetHomePath();
+    [DllImport(nativeLibName)]
+    public static extern string GetPackageName();
+    [DllImport(nativeLibName)]
+    public static extern string GetDataPath();
     [DllImport(nativeLibName)]
     public static extern string GetMainObbPath();
     [DllImport(nativeLibName)]
     public static extern string GetPatchObbPath();
+    [DllImport(nativeLibName)]
+    public static extern string GetInstallerPackageName();
     [DllImport(nativeLibName)]
     public static extern bool CanGLES3();
     
@@ -59,24 +68,63 @@ public static class FNADroid {
         //Allow games / FNA(?) to check for this environment variable.
         Environment.SetEnvironmentVariable("FNADROID_ENABLED", "1");
         
+        PopupDebug("Package: " + GetPackageName() + "\nInstaller: " + GetInstallerPackageName() + "\nGLESv" + (CanGLES3() ? "3+" : "2"));
+        
         //Check for GLES3 and use a GLES3 context instead if possile (custom built / new enough).
         if (CanGLES3()) {
-            PopupDebug("This device supports GLES3+. Asking FNA to use it...");
             Environment.SetEnvironmentVariable("FNA_OPENGL_FORCE_ES3", "1");
         } else {
             PopupDebug("This device supports GLES2. FNA already uses this on Android.");
         }
         
-        //Force FNA to read the content from the ZIP (main OBB) if possible (custom built / new enough).
-        string obbMainPath = GetMainObbPath();
-        if (File.Exists(obbMainPath)) {
-            Environment.SetEnvironmentVariable("FNA_CONTENT_FORCE_ZIP", obbMainPath);
-            
-            string obbPatchPath = GetPatchObbPath();
-            //Unzip patch OBB if available and version differs
-            //TODO
-        }
+        //Check last extracted version of OBBs; unzip if needed
+        
+        ExtractObb(GetMainObbPath());
+        ExtractObb(GetPatchObbPath());
+        //Allow non-default obbs to be extracted.
     }
+    
+    [DllImport(nativeLibName)]
+    internal static extern void j_ExtractObb(string path);
+    public static void ExtractObb(string path) {
+        Console.WriteLine("ExtractObb: " + path);
+        if (!File.Exists(path)) {
+            return;
+        }
+        Console.WriteLine("ExtractObb: found.");
+        
+        string[] split = Path.GetFileName(path).Split('.');
+        string type = split[0];
+        int version = int.Parse(split[1]);
+        Console.WriteLine("ExtractObb: type: " + type);
+        Console.WriteLine("ExtractObb: version: " + version);
+        
+        string pathOldVersion = Path.Combine(GetDataPath(), "obb_"+type+"_v");
+        int oldVersion = -1;
+        if (File.Exists(pathOldVersion)) {
+            //One could try to make FNADroid crash with root, but let's assume the user is nice enough
+            oldVersion = int.Parse(File.ReadAllText(pathOldVersion));
+        }
+        Console.WriteLine("ExtractObb: oldVersion: " + oldVersion);
+        
+        if (version <= oldVersion) {
+            //No need to update / first-extract
+            return;
+        }
+        
+        if (ExtractObbHook != null) {
+            //Allow the game to extract custom obbs if required.
+            //For example, deliver an "installer" via patch, let this
+            //method fail without hook, start installer and let installer
+            //load custom data from obb.
+            ExtractObbHook(path);
+            return;
+        }
+        
+        j_ExtractObb(path);
+    }
+    
+    public static Action<string> ExtractObbHook;
     
 }
 

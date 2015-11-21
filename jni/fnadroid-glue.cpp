@@ -46,8 +46,29 @@ void showError(const char* msg) {
     jnienv->DeleteLocalRef(jsMsg);
 }
 
+char* getGamePath() {
+    return fnadir;
+}
 char* getHomePath() {
     return homedir;
+}
+char* getPackageName() {
+    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
+    jmethodID mID = jnienv->GetStaticMethodID(clazz, "getPackageName", "()Ljava/lang/String;");
+    jstring jsVal = (jstring) jnienv->CallStaticObjectMethod(clazz, mID);
+    const char* val = jnienv->GetStringUTFChars(jsVal, 0);
+    char* valdup = strdup(val); //TODO is that duplication required?!
+    jnienv->ReleaseStringUTFChars(jsVal, val);
+    return valdup;
+}
+char* getDataPath() {
+    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
+    jmethodID mID = jnienv->GetStaticMethodID(clazz, "getDataPath", "()Ljava/lang/String;");
+    jstring jsVal = (jstring) jnienv->CallStaticObjectMethod(clazz, mID);
+    const char* val = jnienv->GetStringUTFChars(jsVal, 0);
+    char* valdup = strdup(val); //TODO is that duplication required?!
+    jnienv->ReleaseStringUTFChars(jsVal, val);
+    return valdup;
 }
 char* getMainObbPath() {
     jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
@@ -61,6 +82,15 @@ char* getMainObbPath() {
 char* getPatchObbPath() {
     jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
     jmethodID mID = jnienv->GetStaticMethodID(clazz, "getPatchObbPath", "()Ljava/lang/String;");
+    jstring jsVal = (jstring) jnienv->CallStaticObjectMethod(clazz, mID);
+    const char* val = jnienv->GetStringUTFChars(jsVal, 0);
+    char* valdup = strdup(val); //TODO is that duplication required?!
+    jnienv->ReleaseStringUTFChars(jsVal, val);
+    return valdup;
+}
+char* getInstallerPackageName() {
+    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
+    jmethodID mID = jnienv->GetStaticMethodID(clazz, "getInstallerPackageName", "()Ljava/lang/String;");
     jstring jsVal = (jstring) jnienv->CallStaticObjectMethod(clazz, mID);
     const char* val = jnienv->GetStringUTFChars(jsVal, 0);
     char* valdup = strdup(val); //TODO is that duplication required?!
@@ -89,7 +119,15 @@ void vibrate(long long milliseconds) {
     jnienv->CallStaticVoidMethod(clazz, mID, (jlong) milliseconds);
 }
 
-//m to c
+void extractObb(char* path) {
+    jstring jsPath = jnienv->NewStringUTF(path);
+    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
+    jmethodID mID = jnienv->GetStaticMethodID(clazz, "extractObb", "(Ljava/lang/String;)V");
+    jnienv->CallStaticVoidMethod(clazz, mID, jsPath);
+    jnienv->DeleteLocalRef(jsPath);
+}
+
+//m to c, c to c++
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -114,14 +152,26 @@ void PopupError(const char* msg) {
     showError(msg);
 }
 
+char* GetGamePath() {
+    return getGamePath();
+}
 char* GetHomePath() {
     return getHomePath();
+}
+char* GetPackageName() {
+    return getPackageName();
+}
+char* GetDataPath() {
+    return getDataPath();
 }
 char* GetMainObbPath() {
     return getMainObbPath();
 }
 char* GetPatchObbPath() {
     return getPatchObbPath();
+}
+char* GetInstallerPackageName() {
+    return getInstallerPackageName();
 }
 bool CanGLES3() {
     return canGLES3();
@@ -135,6 +185,10 @@ bool VibrationAvailable() {
 }
 void Vibrate(long long milliseconds) {
     vibrate(milliseconds);
+}
+
+void j_ExtractObb(char* path) {
+    extractObb(path);
 }
 
 #ifdef __cplusplus

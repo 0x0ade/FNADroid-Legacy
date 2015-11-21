@@ -8,7 +8,7 @@ public class WrapperActivity extends SDLActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         FNADroidWrapper.context = this;
-        FNADroidWrapper.setMonoDirsAuto();
+        FNADroidWrapper.boot();
 
         super.onCreate(savedInstanceState);
 
