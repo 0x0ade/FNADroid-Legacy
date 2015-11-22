@@ -302,7 +302,7 @@ public class FNADroidWrapper {
                     context.runOnUiThread(new Runnable() {
                         public void run() {
                             alert.text.setText("Downloading " + title + " - "  +
-                                    (100 * ((received[0] / fprogressScale) / fsize)) + "%, " +
+                                    (int) (Math.round(100D * ((double) (received[0] / fprogressScale) / (double) fsize))) + "%, " +
                                     received[1] + "kb/s");
                             alert.progress.setProgress((int) (received[0] / fprogressScale));
                             received[2] = 0;
