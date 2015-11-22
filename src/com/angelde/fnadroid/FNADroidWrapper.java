@@ -289,23 +289,30 @@ public class FNADroidWrapper {
                 }
             });
 
-            final long[] received = {0, 0, 0};
-            long timeS = System.currentTimeMillis();
-            long timeE;
-            while (received[0] < expected) {
-                received[1] = foc.transferFrom(rbc, received[0], 2048);
-                timeE = System.currentTimeMillis();
-                received[0] += received[1];
-                received[1] = (long) ((received[0] / 1024D) / ((timeE - timeS) / 1000D));
-                if (received[2] == 0) {
-                    received[2] = 1;
+            //relatively received, tmp received for speed, absolute position, speed, alert lock
+            final long[] received = {0, 0, 0, 0, 0};
+            long[] time = {System.currentTimeMillis(), 0};
+            while (received[2] < expected) {
+                received[0] = foc.transferFrom(rbc, received[2], 2048);
+                time[1] = System.currentTimeMillis();
+                received[1] += received[0];
+                received[2] += received[0];
+
+                if (time[1] - time[0] > 100L) {
+                    received[3] = (long) ((received[1] / 1024D) / ((time[1] - time[0]) / 1000D));
+                    received[1] = 0;
+                    time[0] = System.currentTimeMillis();
+                }
+
+                if (received[4] == 0) {
+                    received[4] = 1;
                     context.runOnUiThread(new Runnable() {
                         public void run() {
                             alert.text.setText("Downloading " + title + " - "  +
-                                    (int) (Math.round(100D * ((double) (received[0] / fprogressScale) / (double) fsize))) + "%, " +
-                                    received[1] + "kb/s");
-                            alert.progress.setProgress((int) (received[0] / fprogressScale));
-                            received[2] = 0;
+                                    (int) (Math.round(100D * ((double) (received[2] / fprogressScale) / (double) fsize))) + "%, " +
+                                    received[3] + "kb/s");
+                            alert.progress.setProgress((int) (received[2] / fprogressScale));
+                            received[4] = 0;
                         }
                     });
                 }
