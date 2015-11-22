@@ -289,15 +289,23 @@ public class FNADroidWrapper {
                 }
             });
 
-            final long[] received = {0, 0};
+            final long[] received = {0, 0, 0};
+            long timeS = System.currentTimeMillis();
+            long timeE;
             while (received[0] < expected) {
-                received[0] += foc.transferFrom(rbc, received[0], 2048);
-                if (received[1] == 0) {
-                    received[1] = 1;
+                received[1] = foc.transferFrom(rbc, received[0], 2048);
+                timeE = System.currentTimeMillis();
+                received[0] += received[1];
+                received[1] = (long) ((received[0] / 1024D) / ((timeE - timeS) / 1000D));
+                if (received[2] == 0) {
+                    received[2] = 1;
                     context.runOnUiThread(new Runnable() {
                         public void run() {
+                            alert.text.setText("Downloading " + title + " - "  +
+                                    (100 * ((received[0] / fprogressScale) / fsize)) + "%, " +
+                                    received[1] + "kb/s");
                             alert.progress.setProgress((int) (received[0] / fprogressScale));
-                            received[1] = 0;
+                            received[2] = 0;
                         }
                     });
                 }
