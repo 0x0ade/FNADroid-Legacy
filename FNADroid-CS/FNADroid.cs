@@ -76,47 +76,17 @@ public static class FNADroid {
         } else {
             PopupDebug("This device supports GLES2. FNA already uses this on Android.");
         }
-        
-        //Check last extracted version of OBBs; unzip if needed
-        
-        ExtractObb(GetMainObbPath());
-        ExtractObb(GetPatchObbPath());
-        //Allow non-default obbs to be extracted.
     }
     
     [DllImport(nativeLibName)]
     internal static extern void j_ExtractObb(string path);
     public static void ExtractObb(string path) {
-        Console.WriteLine("ExtractObb: " + path);
-        if (!File.Exists(path)) {
-            return;
-        }
-        Console.WriteLine("ExtractObb: found.");
-        
-        string[] split = Path.GetFileName(path).Split('.');
-        string type = split[0];
-        int version = int.Parse(split[1]);
-        Console.WriteLine("ExtractObb: type: " + type);
-        Console.WriteLine("ExtractObb: version: " + version);
-        
-        string pathOldVersion = Path.Combine(GetDataPath(), "obb_"+type+"_v");
-        int oldVersion = -1;
-        if (File.Exists(pathOldVersion)) {
-            //One could try to make FNADroid crash with root, but let's assume the user is nice enough
-            oldVersion = int.Parse(File.ReadAllText(pathOldVersion));
-        }
-        Console.WriteLine("ExtractObb: oldVersion: " + oldVersion);
-        
-        if (version <= oldVersion) {
-            //No need to update / first-extract
-            return;
-        }
+        //Allow the game to extract custom obbs if required.
+        //For example, deliver an "installer"
+        //start installer and let installer
+        //load custom data from obb.
         
         if (ExtractObbHook != null) {
-            //Allow the game to extract custom obbs if required.
-            //For example, deliver an "installer" via patch, let this
-            //method fail without hook, start installer and let installer
-            //load custom data from obb.
             ExtractObbHook(path);
             return;
         }

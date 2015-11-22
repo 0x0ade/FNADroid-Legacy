@@ -499,6 +499,8 @@ public class SDLActivity extends Activity {
 class SDLMain implements Runnable {
     @Override
     public void run() {
+        com.angelde.fnadroid.FNADroidWrapper.hookedBoot();
+
         // Runs SDL_main()
         SDLActivity.nativeInit();
 

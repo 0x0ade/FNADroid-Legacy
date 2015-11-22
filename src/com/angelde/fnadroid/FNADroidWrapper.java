@@ -17,19 +17,30 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.*;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 public class FNADroidWrapper {
+    private FNADroidWrapper() {}
 
-    //modify these for your obb versions
-    public final static int OBB_VERSION_MAIN = 1;
-    public final static int OBB_VERSION_PATCH = 1;
+    //variables the FNADroid user / publisher should replace
+    public final static String OBB_MAIN_TITLE = "Mono";
+    public final static int OBB_MAIN_VERSION = 1;
+    public final static String OBB_MAIN_URL = "https://www.dropbox.com/s/7xnlpcyr2gbiyhp/mono-bin.zip?raw=1";
+    public final static int OBB_PATCH_VERSION = 1;
+    public final static String OBB_PATCH_TITLE = "Escape From Minimalism";
+    public final static String OBB_PATCH_URL = "https://www.dropbox.com/s/4fx97zk56xz5wrp/EscapeFromMinimalism.zip?raw=1";
 
-    private FNADroidWrapper() {
-    }
+    //main wrapper
+
+    private static byte[] ioBuffer = new byte[2048];
+    public static boolean obbUseFallbackPath = false;
 
     static {
         //basic dependencies: FNA
@@ -61,14 +72,43 @@ public class FNADroidWrapper {
         gamedir.mkdirs();
         homedir.mkdirs();
 
-        //TODO put FNADroid-CS.dll to gamedir, mono to monodir
-
         Log.i("FNADroid", "Setting Mono dir to " + monodir.getAbsolutePath());
         setMonoDirs(fixPath(new File(monodir, "lib").getAbsolutePath()), fixPath(new File(monodir, "etc").getAbsolutePath()));
         Log.i("FNADroid", "Setting game dir to " + gamedir.getAbsolutePath());
         setGameDir(fixPath(gamedir.getAbsolutePath()));
         Log.i("FNADroid", "Setting home dir to " + homedir.getAbsolutePath());
         setHomeDir(fixPath(homedir.getAbsolutePath()));
+
+        File out = new File(gamedir, "FNADroid-CS.dll");
+
+        if (out.exists()) {
+            return;
+        }
+
+        InputStream is = null;
+        FileOutputStream fos = null;
+        try {
+            is = context.getAssets().open("FNADroid-CS.dll");
+            fos = new FileOutputStream(out);
+
+            int read;
+            while ((read = is.read(ioBuffer)) != -1) {
+                fos.write(ioBuffer, 0, read);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            closeSilently(is);
+            closeSilently(fos);
+        }
+    }
+
+    /**
+     * Called from SDLMain thread.
+     */
+    public static void hookedBoot() {
+        extractObb(getMainObbPath());
+        extractObb(getPatchObbPath());
     }
 
     public static String fixPath(String path) {
@@ -77,8 +117,27 @@ public class FNADroidWrapper {
 
     public static String getObbPath(String obb, int version) {
         File file = new File(Environment.getExternalStorageDirectory() + "/Android/obb/" + context.getPackageName());
+        if (!file.exists() && !obbUseFallbackPath) {
+            Log.i("FNADroid", "Creating folder " + file.getAbsolutePath());
+            obbUseFallbackPath = !file.mkdirs();
+            if (obbUseFallbackPath) {
+                Log.i("FNADroid", "Failed - using fallback path...");
+            }
+        }
+
+        if (obbUseFallbackPath) {
+            file = context.getExternalFilesDir(null);
+            if (file.getName().equals("files")) {
+                file = file.getParentFile();
+            }
+            file = new File(file, "obb-fallback");
+            if (!file.exists()) {
+                file.mkdirs();
+            }
+        }
+
         file = new File(file, obb + "." + version + "." + context.getPackageName() + ".obb");
-        //TODO check if we've downloaded the file / the app comes from the play store, otherwise return appropriately
+
         return fixPath(file.getAbsolutePath());
     }
 
@@ -143,10 +202,10 @@ public class FNADroidWrapper {
         return context.getApplicationInfo().dataDir;
     }
     public static String getMainObbPath() {
-        return getObbPath("main", OBB_VERSION_MAIN);
+        return getObbPath("main", OBB_MAIN_VERSION);
     }
     public static String getPatchObbPath() {
-        return getObbPath("patch", OBB_VERSION_PATCH);
+        return getObbPath("patch", OBB_PATCH_VERSION);
     }
     public static String getInstallerPackageName() {
         String s = context.getPackageManager().getInstallerPackageName(context.getPackageName());
@@ -166,7 +225,94 @@ public class FNADroidWrapper {
         ((Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE)).vibrate(milliseconds);
     }
 
-    private static byte[] obbBuffer = new byte[2048];
+    public static void downloadObb(String path, final String type) {
+        String url_ = "";
+        String title_ = "";
+        if (type.equals("main")) {
+            url_ = OBB_MAIN_URL;
+            title_ = OBB_MAIN_TITLE;
+        } else if (type.equals("patch")) {
+            url_ = OBB_PATCH_URL;
+            title_ = OBB_PATCH_TITLE;
+        }
+
+        if (url_.isEmpty()) {
+            Log.w("FNADroid", type + " obb URL is empty!");
+            return;
+        }
+
+        final String title = title_;
+
+        //For those who really need it: Feel free to implement loading OBBs from Play Store here.
+        //Actually, that would be in FNADroid, but loading from a non-Play-Store path universally
+        //offers one huge profit: Non-Play-Store-Stores (Humble, Amazon) will work, too!
+
+        File obb = new File(path);
+
+        Log.i("FNADroid", type + " download destination: " + obb.getAbsolutePath());
+
+        final SimpleProgressAlert alert = new SimpleProgressAlert(context);
+        context.runOnUiThread(new Runnable() {
+            public void run() {
+                alert.text.setText("Downloading " + title);
+                alert.progress.setProgress(0);
+            }
+        });
+
+        URL url;
+        URLConnection connection;
+        ReadableByteChannel rbc = null;
+        FileOutputStream fos = null;
+        FileChannel foc = null;
+        try {
+            Log.i("FNADroid", "Downloading to " + path);
+            url = new URL(url_);
+            connection = url.openConnection();
+            rbc = Channels.newChannel(connection.getInputStream());
+            fos = new FileOutputStream(obb);
+            foc = fos.getChannel();
+
+            long expected = connection.getContentLength();
+            Log.i("FNADroid", "expected size: " + expected);
+            long size = expected;
+            int progressScale = 1;
+            while (size > Integer.MAX_VALUE) {
+                progressScale *= 10;
+                size = expected / progressScale;
+            }
+            final long fsize = size;
+            final int fprogressScale = progressScale;
+
+            context.runOnUiThread(new Runnable() {
+                public void run() {
+                    alert.progress.setMax((int) fsize);
+                }
+            });
+
+            final long[] received = {0, 0};
+            while (received[0] < expected) {
+                received[0] += foc.transferFrom(rbc, received[0], 2048);
+                if (received[1] == 0) {
+                    received[1] = 1;
+                    context.runOnUiThread(new Runnable() {
+                        public void run() {
+                            alert.progress.setProgress((int) (received[0] / fprogressScale));
+                            received[1] = 0;
+                        }
+                    });
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            closeSilently(rbc);
+            closeSilently(foc);
+            closeSilently(fos);
+        }
+
+        alert.alert.cancel();
+    }
+
     public static void extractObb(String path) {
         File dir = context.getExternalFilesDir(null);
         if (dir.getName().equals("files")) {
@@ -179,41 +325,19 @@ public class FNADroidWrapper {
         String type = split[0];
         int version = Integer.parseInt(split[1]);
 
-        final LinearLayout[] layout = {null};
-        final TextView[] name = {null};
-        final AlertDialog[] alert = {null};
-        final ProgressBar[] progress = {null};
-        context.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                layout[0] = new LinearLayout(context);
-                layout[0].setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
-                layout[0].setOrientation(LinearLayout.VERTICAL);
-                layout[0].setPadding(32, 16, 32, 16);
-                layout[0].addView(name[0] = new TextView(context));
-                name[0].setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
-                layout[0].addView(progress[0] = new ProgressBar(context, null, android.R.attr.progressBarStyleHorizontal));
-                progress[0].setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
-                progress[0].setIndeterminate(false);
-
-                final AlertDialog alert_ = new AlertDialog.Builder(context).create();
-                alert_.setView(layout[0]);
-                alert_.setCancelable(false);
-                alert_.setCanceledOnTouchOutside(false);
-                alert_.show();
-
-                alert[0] = alert_;
-            }
-        });
-
-        //this is called from the native thread; keep it hanging
-        while (alert[0] == null) {
-            try {
-                Thread.sleep(100L);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        for (int i = 0; i < version; i++) {
+            new File(getObbPath(type, i)).delete();
         }
+
+        if (!obb.exists()) {
+            downloadObb(path, type);
+        }
+        if (!obb.exists()) {
+            return;
+        }
+
+        final SimpleProgressAlert alert = new SimpleProgressAlert(context);
+        final boolean[] alertLock = {false};
 
         ZipFile zip = null;
         try {
@@ -226,25 +350,35 @@ public class FNADroidWrapper {
 
                 Log.i("FNADroid", "Extracting " + index + " / " + count + ": " + entry.getName());
 
-                long size = entry.getSize();
+                long esize = entry.getSize();
+                long size = esize;
                 int progressScale = 1;
                 while (size > Integer.MAX_VALUE) {
                     progressScale *= 10;
-                    size = entry.getSize() / progressScale;
+                    size = esize / progressScale;
                 }
                 final long fsize = size;
                 final int fprogressScale = progressScale;
 
-                context.runOnUiThread(new Runnable() {
-                    public void run() {
-                        name[0].setText(findex + " / " + count + ": " + entry.getName());
-                        progress[0].setProgress(0);
-                        progress[0].setMax((int) fsize);
-                    }
-                });
+                if (!alertLock[0]) {
+                    alertLock[0] = true;
+                    context.runOnUiThread(new Runnable() {
+                        public void run() {
+                            alert.text.setText(findex + " / " + count + ": " + entry.getName());
+                            alert.progress.setProgress(0);
+                            alert.progress.setMax((int) fsize);
+                            alertLock[0] = false;
+                        }
+                    });
+                }
 
-                //TODO check for mono file
-                File out = new File(gamedir, entry.getName());
+                File out;
+                String entryName = entry.getName();
+                if (entryName.startsWith("mono/")) {
+                    out = new File(dir, entryName);
+                } else {
+                    out = new File(gamedir, entryName);
+                }
 
                 if (entry.isDirectory()) {
                     out.mkdirs();
@@ -252,7 +386,21 @@ public class FNADroidWrapper {
                 }
 
                 if (out.exists()) {
-                    //TODO compare size / something
+                    long existingSize;
+                    RandomAccessFile raf = null;
+                    try {
+                        raf = new RandomAccessFile(out, "r");
+                        existingSize = raf.length();
+                    } catch (IOException e_) {
+                        throw e_;
+                    } finally {
+                        closeSilently(raf);
+                    }
+                    raf.close();
+
+                    if (existingSize == esize) {
+                        continue;
+                    }
                     out.delete();
                 }
                 out.createNewFile();
@@ -266,14 +414,14 @@ public class FNADroidWrapper {
 
                     final long[] readCompletely = {0, 0};
                     int read;
-                    while ((read = is.read(obbBuffer)) != -1) {
-                        fos.write(obbBuffer, 0, read);
+                    while ((read = is.read(ioBuffer)) != -1) {
+                        fos.write(ioBuffer, 0, read);
                         readCompletely[0] += read;
                         if (readCompletely[1] == 0) {
                             readCompletely[1] = 1;
                             context.runOnUiThread(new Runnable() {
                                 public void run() {
-                                    progress[0].setProgress((int) (readCompletely[0] / fprogressScale));
+                                    alert.progress.setProgress((int) (readCompletely[0] / fprogressScale));
                                     readCompletely[1] = 0;
                                 }
                             });
@@ -295,8 +443,7 @@ public class FNADroidWrapper {
             closeSilently(zip);
         }
 
-        alert[0].cancel();
-
+        alert.alert.cancel();
     }
 
 }
