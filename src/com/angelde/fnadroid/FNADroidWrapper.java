@@ -34,8 +34,8 @@ public class FNADroidWrapper {
     public final static int OBB_MAIN_VERSION = 1;
     public final static String OBB_MAIN_URL = "https://www.dropbox.com/s/7xnlpcyr2gbiyhp/mono-bin.zip?raw=1";
     public final static int OBB_PATCH_VERSION = 1;
-    public final static String OBB_PATCH_TITLE = "Escape From Minimalism";
-    public final static String OBB_PATCH_URL = "https://www.dropbox.com/s/4fx97zk56xz5wrp/EscapeFromMinimalism.zip?raw=1";
+    public final static String OBB_PATCH_TITLE = "Game";
+    public final static String OBB_PATCH_URL = "";
 
     //main wrapper
 
@@ -79,16 +79,22 @@ public class FNADroidWrapper {
         Log.i("FNADroid", "Setting home dir to " + homedir.getAbsolutePath());
         setHomeDir(fixPath(homedir.getAbsolutePath()));
 
-        File out = new File(gamedir, "FNADroid-CS.dll");
+        extractAsset(gamedir, "FNADroid-CS.dll");
+        extractAsset(gamedir, "FNA.dll.config");
+
+    }
+
+    public static void extractAsset(File gamedir, String name) {
+        File out = new File(gamedir, name);
 
         if (out.exists()) {
-            return;
+            out.delete();
         }
 
         InputStream is = null;
         FileOutputStream fos = null;
         try {
-            is = context.getAssets().open("FNADroid-CS.dll");
+            is = context.getAssets().open(name);
             fos = new FileOutputStream(out);
 
             int read;
