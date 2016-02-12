@@ -41,7 +41,17 @@ public static class FNADroid {
     [DllImport(nativeLibName)]
     public static extern string GetInstallerPackageName();
     [DllImport(nativeLibName)]
-    public static extern bool CanGLES3();
+    private static extern int j_GetMaxGLES();
+    public static int GetMaxGLES() {
+        int esAndroid = j_GetMaxGLES();
+        //Android returns the value in bitshifted hex.
+        //The upper order 16 bits represent the major version and
+        //the lower order 16 bits the minor version.
+        int esMaj = esAndroid >> 16;
+        int esMin = esAndroid & 0x0000FFFF;
+        
+        return esMaj * 10 + esMin;
+    }
     
     [DllImport(nativeLibName)]
     public static extern void VibrationCancel();
@@ -68,14 +78,18 @@ public static class FNADroid {
         //Allow games / FNA(?) to check for this environment variable.
         Environment.SetEnvironmentVariable("FNADROID_ENABLED", "1");
         
-        PopupDebug("Package: " + GetPackageName() + "\nInstaller: " + GetInstallerPackageName() + "\nGLESv" + (CanGLES3() ? "3+" : "2"));
+        int es = GetMaxGLES();
+        int esMaj = (int) Math.Floor(es / 10D);
+        int esMin = es - esMaj * 10;
+        string esString = esMaj + "." + esMin;
         
-        //Check for GLES3 and use a GLES3 context instead if possile (custom built / new enough).
-        if (CanGLES3()) {
-            Environment.SetEnvironmentVariable("FNA_OPENGL_FORCE_ES3", "1");
-        } else {
-            PopupDebug("This device supports GLES2. FNA already uses this on Android.");
-        }
+        PopupDebug("Package: " + GetPackageName() + "\nInstaller: " + GetInstallerPackageName() + "\nGLES: " + esString);
+        
+        //Set GLES version
+        //Backwards-compatibility with "original" (unmodified) FNA
+        Environment.SetEnvironmentVariable("FNA_OPENGL_FORCE_ES2", "1");
+        //The FNADroid FNA clone supports setting the version.
+        Environment.SetEnvironmentVariable("FNA_OPENGL_FORCE_ES", esString);
     }
     
     [DllImport(nativeLibName)]

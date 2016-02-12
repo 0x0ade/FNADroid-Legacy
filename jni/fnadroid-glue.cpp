@@ -97,10 +97,10 @@ char* getInstallerPackageName() {
     jnienv->ReleaseStringUTFChars(jsVal, val);
     return valdup;
 }
-bool canGLES3() {
+int getMaxGLES() {
     jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
-    jmethodID mID = jnienv->GetStaticMethodID(clazz, "canGLES3", "()Z");
-    return (bool) jnienv->CallStaticBooleanMethod(clazz, mID);
+    jmethodID mID = jnienv->GetStaticMethodID(clazz, "getMaxGLES", "()I");
+    return (int) jnienv->CallStaticIntMethod(clazz, mID);
 }
 
 void vibrationCancel() {
@@ -173,8 +173,8 @@ char* GetPatchObbPath() {
 char* GetInstallerPackageName() {
     return getInstallerPackageName();
 }
-bool CanGLES3() {
-    return canGLES3();
+int j_GetMaxGLES() {
+    return getMaxGLES();
 }
 
 void VibrationCancel() {

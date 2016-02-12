@@ -217,8 +217,8 @@ public class FNADroidWrapper {
         String s = context.getPackageManager().getInstallerPackageName(context.getPackageName());
         return s == null ? "unknown" : s;
     }
-    public static boolean canGLES3() {
-        return ((ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE)).getDeviceConfigurationInfo().reqGlEsVersion >= 0x30000;
+    public static int getMaxGLES() {
+        return ((ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE)).getDeviceConfigurationInfo().reqGlEsVersion;
     }
 
     public static void vibrationCancel() {
