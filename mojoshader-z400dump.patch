@@ -1,0 +1,81 @@
+diff --git a/GL/glext.h b/GL/glext.h
+index e607161..d2c624e 100644
+--- a/GL/glext.h
++++ b/GL/glext.h
+@@ -4366,6 +4366,8 @@ extern "C" {
+ #define GL_IMPLEMENTATION_COLOR_READ_TYPE_OES 0x8B9A
+ #define GL_IMPLEMENTATION_COLOR_READ_FORMAT_OES 0x8B9B
+ #endif
++#define GL_PROGRAM_BINARY_LENGTH_OES 0x8741
++#define GL_Z400_BINARY_AMD 0x8740
+ 
+ #ifndef GL_EXT_depth_bounds_test
+ #define GL_DEPTH_BOUNDS_TEST_EXT          0x8890
+@@ -7376,10 +7378,12 @@ typedef void (APIENTRYP PFNGLCLEARDEPTHFPROC) (GLclampf d);
+ #define GL_ARB_get_program_binary 1
+ #ifdef GL_GLEXT_PROTOTYPES
+ GLAPI void APIENTRY glGetProgramBinary (GLuint program, GLsizei bufSize, GLsizei *length, GLenum *binaryFormat, GLvoid *binary);
++GLAPI void APIENTRY glGetProgramBinaryOES (GLuint program, GLsizei bufSize, GLsizei *length, GLenum *binaryFormat, GLvoid *binary);
+ GLAPI void APIENTRY glProgramBinary (GLuint program, GLenum binaryFormat, const GLvoid *binary, GLsizei length);
+ GLAPI void APIENTRY glProgramParameteri (GLuint program, GLenum pname, GLint value);
+ #endif /* GL_GLEXT_PROTOTYPES */
+ typedef void (APIENTRYP PFNGLGETPROGRAMBINARYPROC) (GLuint program, GLsizei bufSize, GLsizei *length, GLenum *binaryFormat, GLvoid *binary);
++typedef void (APIENTRYP PFNGLGETPROGRAMBINARYOESPROC) (GLuint program, GLsizei bufSize, GLsizei *length, GLenum *binaryFormat, GLvoid *binary);
+ typedef void (APIENTRYP PFNGLPROGRAMBINARYPROC) (GLuint program, GLenum binaryFormat, const GLvoid *binary, GLsizei length);
+ typedef void (APIENTRYP PFNGLPROGRAMPARAMETERIPROC) (GLuint program, GLenum pname, GLint value);
+ #endif
+diff --git a/mojoshader_opengl.c b/mojoshader_opengl.c
+index e110b12..d612940 100644
+--- a/mojoshader_opengl.c
++++ b/mojoshader_opengl.c
+@@ -260,6 +260,7 @@ struct MOJOSHADER_glContext
+     PFNGLBINDPROGRAMARBPROC glBindProgramARB;
+     PFNGLPROGRAMSTRINGARBPROC glProgramStringARB;
+     PFNGLVERTEXATTRIBDIVISORARBPROC glVertexAttribDivisorARB;
++    PFNGLGETPROGRAMBINARYOESPROC glGetProgramBinaryOES;
+ 
+     // interface for profile-specific things.
+     int (*profileMaxUniforms)(MOJOSHADER_shaderType shader_type);
+@@ -537,6 +538,21 @@ static GLuint impl_GLSL_LinkProgram(MOJOSHADER_glShader *vshader,
+             return 0;
+         } // if
+ 
++        GLint binaryLength;
++        void* binary;
++        FILE* outfile;
++
++        ctx->glGetProgramiv(program, GL_PROGRAM_BINARY_LENGTH_OES, &binaryLength);
++        binary = (void*)malloc(binaryLength);
++        ctx->glGetProgramBinaryOES(program, &binaryLength, NULL, GL_Z400_BINARY_AMD, binary);
++
++        char filename[64];
++        sprintf(filename, "Program.%u.AMD_Z400.bin", (unsigned int) program);
++        outfile = fopen(filename, "wb");
++        fwrite(binary, binaryLength, 1, outfile);
++        fclose(outfile);
++        free(binary);
++
+         return program;
+     } // if
+     else
+@@ -1002,6 +1018,7 @@ static void lookup_entry_points(MOJOSHADER_glGetProcAddress lookup, void *d)
+     DO_LOOKUP(GL_ARB_vertex_program, PFNGLPROGRAMSTRINGARBPROC, glProgramStringARB);
+     DO_LOOKUP(GL_NV_gpu_program4, PFNGLPROGRAMLOCALPARAMETERI4IVNVPROC, glProgramLocalParameterI4ivNV);
+     DO_LOOKUP(GL_ARB_instanced_arrays, PFNGLVERTEXATTRIBDIVISORARBPROC, glVertexAttribDivisorARB);
++    DO_LOOKUP(opengl_2, PFNGLGETPROGRAMBINARYOESPROC, glGetProgramBinaryOES);
+ 
+     #undef DO_LOOKUP
+ } // lookup_entry_points
+@@ -1074,8 +1091,10 @@ static void detect_glsl_version(void)
+         const char *str = (const char *) ctx->glGetString(enumval);
+         if (ctx->glGetError() == GL_INVALID_ENUM)
+             str = NULL;
+-        if (strstr(str, "OpenGL ES GLSL ES "))
+-            str += 18;
++        if (strstr(str, "OpenGL ES GLSL "))
++            str += 15;
++        if (strstr(str, "ES "))
++            str += 3;
+         parse_opengl_version_str(str, &ctx->glsl_major, &ctx->glsl_minor);
+     } // if
+ #endif

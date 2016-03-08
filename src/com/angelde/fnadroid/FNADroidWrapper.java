@@ -4,6 +4,9 @@ import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorManager;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
@@ -15,6 +18,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import org.libsdl.app.SDLSurface;
 
 import java.io.*;
 import java.net.URL;
@@ -23,6 +27,7 @@ import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.util.Enumeration;
+import java.util.Scanner;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -163,9 +168,10 @@ public class FNADroidWrapper {
     public native static void onPause();
     public native static void onResume();
     public native static void onStop();
-    private native static void setMonoDirs(String lib, String etc);
-    private native static void setGameDir(String to);
-    private native static void setHomeDir(String to);
+    public native static void setMonoDirs(String lib, String etc);
+    public native static void setGameDir(String to);
+    public native static void setHomeDir(String to);
+    public native static void onAccelerometerDataChanged();
 
     //cpp to j
     public static void showDebug(final String msg) {
@@ -217,18 +223,87 @@ public class FNADroidWrapper {
         String s = context.getPackageManager().getInstallerPackageName(context.getPackageName());
         return s == null ? "unknown" : s;
     }
-    public static int getMaxGLES() {
+    public static int getMaximumGLES() {
+        File dir = context.getExternalFilesDir(null);
+        if (dir.getName().equals("files")) {
+            dir = dir.getParentFile();
+        }
+        File glesFile = new File(dir, "gles.txt");
+        if (glesFile.exists()) {
+            Scanner scanner = null;
+            String glesString = "20"; //fallback
+            try {
+                scanner = new Scanner(glesFile, "UTF-8");
+                glesString = scanner.useDelimiter("\\A").next().trim();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                closeSilently(scanner);
+            }
+            int glesMaj = 2;
+            int glesMin = 0;
+            if (!glesString.contains(".")) {
+                glesMaj = Integer.parseInt(glesString);
+            } else {
+                String[] glesStringSplit = glesString.split("\\.");
+                glesMaj = Integer.parseInt(glesStringSplit[0]);
+                glesMin = Integer.parseInt(glesStringSplit[1]);
+            }
+            return glesMin | (glesMaj << 16);
+        }
         return ((ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE)).getDeviceConfigurationInfo().reqGlEsVersion;
     }
 
+    public static Vibrator vibrator;
+    public static Vibrator getVibrator() {
+        if (vibrator != null) {
+            return vibrator;
+        }
+        return vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+    }
     public static void vibrationCancel() {
-        ((Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE)).cancel();
+        getVibrator().cancel();
     }
     public static boolean vibrationAvailable() {
-        return ((Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE)).hasVibrator();
+        return getVibrator().hasVibrator();
     }
     public static void vibrate(long milliseconds) {
-        ((Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE)).vibrate(milliseconds);
+        getVibrator().vibrate(milliseconds);
+    }
+
+    private static float[] accelerometerData;
+    private static float[] gyroscopeData;
+    /**
+     * Called from SDLSurface.
+     */
+    public static void hookedOnSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            accelerometerData = event.values;
+            onAccelerometerDataChanged();
+        }
+        if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+            gyroscopeData = event.values;
+        }
+    }
+    /**
+     * Called from SDLSurface.
+     */
+    public static void hookedEnableAdditionalSensors(SDLSurface self, boolean enabled) {
+        self.enableSensor(Sensor.TYPE_GYROSCOPE, enabled);
+    }
+
+    public static boolean accelerometerAvailable() {
+        return !SDLSurface.getSensorManager().getSensorList(Sensor.TYPE_ACCELEROMETER).isEmpty();
+    }
+    public static float getAccelerometerAxis(int axis) {
+        return accelerometerData[axis];
+    }
+
+    public static boolean gyroscopeAvailable() {
+        return !SDLSurface.getSensorManager().getSensorList(Sensor.TYPE_GYROSCOPE).isEmpty();
+    }
+    public static float getGyroscopeRotationRateAxis(int axis) {
+        return gyroscopeData[axis];
     }
 
     public static void downloadObb(String path, final String type) {
@@ -459,6 +534,7 @@ public class FNADroidWrapper {
                 index++;
             }
         } catch (IOException e) {
+            //not your standard obb - the game needs to handle it manually
             e.printStackTrace();
         } finally {
             closeSilently(zip);

@@ -1,5 +1,8 @@
 package com.angelde.fnadroid;
 
+import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import org.libsdl.app.SDLActivity;
 
@@ -24,9 +27,9 @@ public class WrapperActivity extends SDLActivity {
 
     @Override
     protected void onPause() {
-        super.onPause();
-
         FNADroidWrapper.onPause();
+
+        super.onPause();
     }
 
     @Override
@@ -38,9 +41,9 @@ public class WrapperActivity extends SDLActivity {
 
     @Override
     protected void onStop() {
-        super.onStop();
-
         FNADroidWrapper.onStop();
+
+        super.onStop();
     }
 
 }

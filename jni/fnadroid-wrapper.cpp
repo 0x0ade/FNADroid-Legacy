@@ -41,13 +41,15 @@ int SDL_main(int argc, char* argv[]) {
     if (fnadroid) {
         //FNADroid-CS.dll is a helper assembly containing helper code.
         fnadroidi = mono_assembly_get_image(fnadroid);
-        MonoMethodDesc* runDesc = mono_method_desc_new("FNADroid:Boot()", true);
-        MonoMethod* run = mono_method_desc_search_in_image(runDesc, fnadroidi);
-        if (run) {
-            mono_runtime_invoke(run, NULL, NULL, NULL);
+        MonoMethodDesc* bootDesc = mono_method_desc_new("FNADroid:Boot()", true);
+        MonoMethod* boot = mono_method_desc_search_in_image(bootDesc, fnadroidi);
+        if (boot) {
+            mono_runtime_invoke(boot, NULL, NULL, NULL);
         } else {
             LOGI("FNADroid-CS.dll found, but not Boot()");
         }
+    } else {
+        LOGI("FNADroid-CS.dll not found");
     }
 
     assembly = mono_domain_assembly_open(domain, "game.exe");
@@ -132,6 +134,17 @@ JNIEXPORT void JNICALL Java_com_angelde_fnadroid_FNADroidWrapper_setHomeDir(JNIE
     homedir = strdup(to);
 
     env->ReleaseStringUTFChars(jsTo, to);
+}
+
+MonoMethod* oadc;
+JNIEXPORT void JNICALL Java_com_angelde_fnadroid_FNADroidWrapper_onAccelerometerDataChanged(JNIEnv* env, jclass cls) {
+    if (fnadroid && !oadc) {
+        MonoMethodDesc* oadcDesc = mono_method_desc_new("FNADroid:OnAccelerometerDataChanged()", true);
+        oadc = mono_method_desc_search_in_image(oadcDesc, fnadroidi);
+    }
+    if (oadc) {
+        mono_runtime_invoke(oadc, NULL, NULL, NULL);
+    }
 }
 
 #ifdef __cplusplus

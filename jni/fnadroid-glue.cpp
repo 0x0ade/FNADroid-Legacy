@@ -97,9 +97,9 @@ char* getInstallerPackageName() {
     jnienv->ReleaseStringUTFChars(jsVal, val);
     return valdup;
 }
-int getMaxGLES() {
+int getMaximumGLES() {
     jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
-    jmethodID mID = jnienv->GetStaticMethodID(clazz, "getMaxGLES", "()I");
+    jmethodID mID = jnienv->GetStaticMethodID(clazz, "getMaximumGLES", "()I");
     return (int) jnienv->CallStaticIntMethod(clazz, mID);
 }
 
@@ -119,15 +119,35 @@ void vibrate(long long milliseconds) {
     jnienv->CallStaticVoidMethod(clazz, mID, (jlong) milliseconds);
 }
 
-void extractObb(char* path) {
-    jstring jsPath = jnienv->NewStringUTF(path);
+bool accelerometerAvailable() {
     jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
-    jmethodID mID = jnienv->GetStaticMethodID(clazz, "extractObb", "(Ljava/lang/String;)V");
-    jnienv->CallStaticVoidMethod(clazz, mID, jsPath);
-    jnienv->DeleteLocalRef(jsPath);
+    jmethodID mID = jnienv->GetStaticMethodID(clazz, "accelerometerAvailable", "()Z");
+    return (bool) jnienv->CallStaticBooleanMethod(clazz, mID);
+}
+float getAccelerometerAxis(int axis) {
+    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
+    jmethodID mID = jnienv->GetStaticMethodID(clazz, "getAccelerometerAxis", "(I)F");
+    return (float) jnienv->CallStaticFloatMethod(clazz, mID);
 }
 
-//m to c, c to c++
+bool gyroscopeAvailable() {
+    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
+    jmethodID mID = jnienv->GetStaticMethodID(clazz, "gyroscopeAvailable", "()Z");
+    return (bool) jnienv->CallStaticBooleanMethod(clazz, mID);
+}
+float getGyroscopeRotationRateAxis(int axis) {
+    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
+    jmethodID mID = jnienv->GetStaticMethodID(clazz, "getGyroscopeRotationRateAxis", "(I)F");
+    return (float) jnienv->CallStaticFloatMethod(clazz, mID);
+}
+
+int getMaximumTouchCount() {
+    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
+    jmethodID mID = jnienv->GetStaticMethodID(clazz, "getMaximumTouchCount", "()I");
+    return (int) jnienv->CallStaticIntMethod(clazz, mID);
+}
+
+//m to c, c to cpp
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -173,8 +193,8 @@ char* GetPatchObbPath() {
 char* GetInstallerPackageName() {
     return getInstallerPackageName();
 }
-int j_GetMaxGLES() {
-    return getMaxGLES();
+int j_GetMaximumGLES() {
+    return getMaximumGLES();
 }
 
 void VibrationCancel() {
@@ -187,8 +207,22 @@ void Vibrate(long long milliseconds) {
     vibrate(milliseconds);
 }
 
-void j_ExtractObb(char* path) {
-    extractObb(path);
+bool AccelerometerAvailable() {
+    return accelerometerAvailable();
+}
+float GetAccelerometerAxis(int axis) {
+    return getAccelerometerAxis(axis);
+}
+
+bool GyroscopeAvailable() {
+    return gyroscopeAvailable();
+}
+float GetGyroscopeRotationRateAxis(int axis) {
+    return getGyroscopeRotationRateAxis(axis);
+}
+
+int GetMaximumTouchCount() {
+    return getMaximumTouchCount();
 }
 
 #ifdef __cplusplus
