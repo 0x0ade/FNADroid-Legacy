@@ -4,6 +4,7 @@ import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
@@ -304,6 +305,24 @@ public class FNADroidWrapper {
     }
     public static float getGyroscopeRotationRateAxis(int axis) {
         return gyroscopeData[axis];
+    }
+
+    public static int getMaximumTouchCount() {
+        PackageManager pm = context.getPackageManager();
+        //Android rather only gives us estimates for the maximum, or, the "minimum".
+        if (pm.hasSystemFeature(PackageManager.FEATURE_TOUCHSCREEN_MULTITOUCH_JAZZHAND)) {
+            return 5;
+        }
+        if (pm.hasSystemFeature(PackageManager.FEATURE_TOUCHSCREEN_MULTITOUCH_DISTINCT)) {
+            return 3;
+        }
+        if (pm.hasSystemFeature(PackageManager.FEATURE_TOUCHSCREEN_MULTITOUCH)) {
+            return 2;
+        }
+        if (pm.hasSystemFeature(PackageManager.FEATURE_TOUCHSCREEN)) {
+            return 1;
+        }
+        return 0;
     }
 
     public static void downloadObb(String path, final String type) {
