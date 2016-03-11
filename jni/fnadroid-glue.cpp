@@ -174,7 +174,7 @@ float getAccelerometerAxis(int axis) {
 #ifndef FNADROID_DESKTOP
     jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
     jmethodID mID = jnienv->GetStaticMethodID(clazz, "getAccelerometerAxis", "(I)F");
-    return (float) jnienv->CallStaticFloatMethod(clazz, mID);
+    return (float) jnienv->CallStaticFloatMethod(clazz, mID, (jint) axis);
 #else
     return 0;
 #endif
@@ -193,7 +193,7 @@ float getGyroscopeRotationRateAxis(int axis) {
 #ifndef FNADROID_DESKTOP
     jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
     jmethodID mID = jnienv->GetStaticMethodID(clazz, "getGyroscopeRotationRateAxis", "(I)F");
-    return (float) jnienv->CallStaticFloatMethod(clazz, mID);
+    return (float) jnienv->CallStaticFloatMethod(clazz, mID, (jint) axis);
 #else
     return 0;
 #endif

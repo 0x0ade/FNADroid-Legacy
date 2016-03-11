@@ -298,14 +298,14 @@ public class FNADroidWrapper {
         return !SDLSurface.getSensorManager().getSensorList(Sensor.TYPE_ACCELEROMETER).isEmpty();
     }
     public static float getAccelerometerAxis(int axis) {
-        return accelerometerData[axis];
+        return (axis < 0 || accelerometerData.length <= axis) ? 0f : accelerometerData[axis];
     }
 
     public static boolean gyroscopeAvailable() {
         return !SDLSurface.getSensorManager().getSensorList(Sensor.TYPE_GYROSCOPE).isEmpty();
     }
     public static float getGyroscopeRotationRateAxis(int axis) {
-        return gyroscopeData[axis];
+        return (axis < 0 || gyroscopeData.length <= axis) ? 0f : gyroscopeData[axis];
     }
 
     public static int getMaximumTouchCount() {
