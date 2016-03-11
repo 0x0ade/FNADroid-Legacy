@@ -1,14 +1,22 @@
 #include "fnadroid-wrapper.h"
 
-#include <jni.h>
 #include <errno.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
+#ifndef FNADROID_DESKTOP
+#include <jni.h>
 #include <android/sensor.h>
 #include <android/log.h>
+
+#define SDL_MAIN_HANDLED
+#include <SDL_main.h>
+#include <SDL.h>
+#else
+#include <string.h>
+#endif
 
 #include <mono/jit/jit.h>
 #include <mono/metadata/assembly.h>
@@ -17,17 +25,16 @@
 #include <mono/metadata/debug-helpers.h>
 #include <mono/utils/mono-logger.h>
 
-#define SDL_MAIN_HANDLED
-#include <SDL_main.h>
-#include <SDL.h>
-
 //main embedded mono code
 
+#ifndef FNADROID_DESKTOP
 int SDL_main(int argc, char* argv[]) {
     chdir(fnadir);
-
+#else
+int fnadroid_boot() {
+#endif
     mono_config_parse(NULL);
-    domain = mono_jit_init_version("fnadroid-domain", "v4.0.30319");
+    domain = mono_jit_init("fnadroid-domain");
 
     mono_thread_attach(domain);
 
@@ -37,22 +44,16 @@ int SDL_main(int argc, char* argv[]) {
         return -1;
     }
 
-    fnadroid = mono_domain_assembly_open(domain, "FNADroid-CS.dll");
+    fnadroid = mono_domain_assembly_open(domain, "FNADroid-Lib.dll");
     if (fnadroid) {
-        //FNADroid-CS.dll is a helper assembly containing helper code.
+        //FNADroid-Lib.dll is a helper assembly containing helper code.
+        //We need a reference to the assembly and the image to invoke methods in it from Java.
         fnadroidi = mono_assembly_get_image(fnadroid);
-        MonoMethodDesc* bootDesc = mono_method_desc_new("FNADroid:Boot()", true);
-        MonoMethod* boot = mono_method_desc_search_in_image(bootDesc, fnadroidi);
-        if (boot) {
-            mono_runtime_invoke(boot, NULL, NULL, NULL);
-        } else {
-            LOGI("FNADroid-CS.dll found, but not Boot()");
-        }
     } else {
-        LOGI("FNADroid-CS.dll not found");
+        LOGI("FNADroid-Lib.dll not found");
     }
 
-    assembly = mono_domain_assembly_open(domain, "game.exe");
+    assembly = mono_domain_assembly_open(domain, "FNADroid-Boot.exe");
     if (!assembly) {
         LOGE("Assembly could not be loaded!");
         return -1;
@@ -61,7 +62,10 @@ int SDL_main(int argc, char* argv[]) {
     char *argv_[2];
     argv_[0] = strdup("--android");
     argv_[1] = NULL;
+    LOGI("Executing managed code...");
     mono_jit_exec(domain, assembly, 1, argv_);
+    LOGI("... aand we're back!");
+    return 0;
 }
 
 //java activity and helper methods
@@ -88,6 +92,9 @@ void onStop() {
 extern "C" {
 #endif
 
+//j to c
+#ifndef FNADROID_DESKTOP
+
 JNIEXPORT void JNICALL Java_com_angelde_fnadroid_FNADroidWrapper_onCreate(JNIEnv* env, jclass cls) {
 	onCreate();
 }
@@ -107,8 +114,6 @@ JNIEXPORT void JNICALL Java_com_angelde_fnadroid_FNADroidWrapper_onResume(JNIEnv
 JNIEXPORT void JNICALL Java_com_angelde_fnadroid_FNADroidWrapper_onStop(JNIEnv* env, jclass cls) {
 	onStop();
 }
-
-//j to c
 
 JNIEXPORT void JNICALL Java_com_angelde_fnadroid_FNADroidWrapper_setMonoDirs(JNIEnv* env, jclass cls, jstring jsLib, jstring jsEtc) {
     const char* lib = env->GetStringUTFChars(jsLib, 0);
@@ -146,6 +151,8 @@ JNIEXPORT void JNICALL Java_com_angelde_fnadroid_FNADroidWrapper_onAccelerometer
         mono_runtime_invoke(oadc, NULL, NULL, NULL);
     }
 }
+
+#endif //ifndef FNADROID_DESKTOP
 
 #ifdef __cplusplus
 }

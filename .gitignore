@@ -13,6 +13,9 @@ gen
 .idea
 
 #FNADroid-CS
-FNADroid-CS/bin
-FNADroid-CS/out
-FNADroid-CS/*.userprefs
+FNADroid-CS/FNADroid-Lib/bin
+FNADroid-CS/FNADroid-Lib/out
+FNADroid-CS/FNADroid-Lib/*.userprefs
+FNADroid-CS/FNADroid-Boot/bin
+FNADroid-CS/FNADroid-Boot/out
+FNADroid-CS/FNADroid-Boot/*.userprefs

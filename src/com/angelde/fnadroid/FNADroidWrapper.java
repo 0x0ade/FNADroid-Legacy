@@ -85,7 +85,8 @@ public class FNADroidWrapper {
         Log.i("FNADroid", "Setting home dir to " + homedir.getAbsolutePath());
         setHomeDir(fixPath(homedir.getAbsolutePath()));
 
-        extractAsset(gamedir, "FNADroid-CS.dll");
+        extractAsset(gamedir, "FNADroid-Lib.dll");
+        extractAsset(gamedir, "FNADroid-Boot.exe");
         extractAsset(gamedir, "FNA.dll.config");
 
     }
