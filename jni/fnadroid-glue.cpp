@@ -214,25 +214,11 @@ int getMaximumTouchCount() {
 extern "C" {
 #endif
 
-void PrintInfo(const char* msg) {
+void Log(const int level, const char* tag, const char* msg) {
 #ifndef FNADROID_DESKTOP
-    __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "%s", msg);
+    __android_log_print(level, tag, "%s", msg);
 #else
-    printf("[FNADroid] I: %s\n", msg);
-#endif
-}
-void PrintWarn(const char* msg) {
-#ifndef FNADROID_DESKTOP
-    __android_log_print(ANDROID_LOG_WARN, LOG_TAG, "%s", msg);
-#else
-    printf("[FNADroid] W: %s\n", msg);
-#endif
-}
-void PrintError(const char* msg) {
-#ifndef FNADROID_DESKTOP
-    __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "%s", msg);
-#else
-    printf("[FNADroid] E: %s\n", msg);
+    printf("[%i][%s] %s\n", level, tag, msg);
 #endif
 }
 

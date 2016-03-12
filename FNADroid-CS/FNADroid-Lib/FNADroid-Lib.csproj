@@ -36,7 +36,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Lib.cs" />
+    <Compile Include="FNADroidLib.cs" />
+	<Compile Include="Log.cs" />
+	<Compile Include="Vibration.cs" />
+	<Compile Include="Accelerometer.cs" />
+	<Compile Include="Gyroscope.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

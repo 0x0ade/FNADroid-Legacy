@@ -174,6 +174,23 @@ public class FNADroidWrapper {
     public native static void setGameDir(String to);
     public native static void setHomeDir(String to);
     public native static void onAccelerometerDataChanged();
+    public native static void onGyroscopeRotationRateChanged();
+    public native static void attachThread();
+
+    //cpp to j, not exposed to m
+    private static boolean attachedUIThread = false;
+    public static void attachUIThread() {
+        if (attachedUIThread) {
+            return;
+        }
+        context.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                attachThread();
+                attachedUIThread = true;
+            }
+        });
+    }
 
     //cpp to j
     public static void showDebug(final String msg) {
@@ -281,10 +298,15 @@ public class FNADroidWrapper {
     public static void hookedOnSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             accelerometerData = event.values;
-            onAccelerometerDataChanged();
+            if (attachedUIThread) {
+                onAccelerometerDataChanged();
+            }
         }
         if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
             gyroscopeData = event.values;
+            if (attachedUIThread) {
+                onGyroscopeRotationRateChanged();
+            }
         }
     }
     /**
@@ -464,7 +486,7 @@ public class FNADroidWrapper {
                 final ZipEntry entry = entries.nextElement();
                 final int findex = index;
 
-                Log.i("FNADroid", "Extracting " + index + " / " + count + ": " + entry.getName());
+                Log.v("FNADroid", "Extracting " + index + " / " + count + ": " + entry.getName());
 
                 long esize = entry.getSize();
                 long size = esize;

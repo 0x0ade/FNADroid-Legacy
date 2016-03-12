@@ -40,7 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="LogcatWriter.cs" />
-    <Compile Include="Boot.cs" />
+    <Compile Include="FNADroidBoot.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
