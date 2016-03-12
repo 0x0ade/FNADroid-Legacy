@@ -13,7 +13,7 @@ namespace FNADroid {
 			}
 		}
 		
-		private /*readonly*/ StringBuilder builder = new StringBuilder();
+		private readonly StringBuilder builder = new StringBuilder();
 		
 		public string Tag = "FNADroid.LogcatWriter";
 		public Log.Level Level = Log.Level.INFO;
@@ -25,8 +25,7 @@ namespace FNADroid {
 				return;
 			}
 			string complete = builder.ToString();
-			//builder.Clear(); //Clear is missing - androidmono seemingly forgot to compile with NET_4_0..?!
-			builder = new StringBuilder();
+			builder.Clear();
 			int pos = 0;
 			while ((nl = complete.IndexOf('\n', pos)) > 0) {
 				Log.Line(Level, Tag, complete.Substring(pos, nl));

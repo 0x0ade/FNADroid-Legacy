@@ -35,8 +35,8 @@ int fnadroid_boot() {
 #endif
     mono_config_parse(NULL);
     //mono_jit_set_aot_only(true); //TODO generate binaries on first run
-    //mono_trace_set_level_string("debug"); //TODO check if 3rd+ attempt
-    domain = mono_jit_init("fnadroid-domain");
+    //mono_trace_set_level_string("debug"); //TODO check if 3rd+ attempt in a minute
+    domain = mono_jit_init_version("fnadroid-domain", "v4.0.30319");
 
     mono_thread_attach(domain);
 
