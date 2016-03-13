@@ -4,6 +4,7 @@ import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import org.libsdl.app.SDLActivity;
 
 public class WrapperActivity extends SDLActivity {

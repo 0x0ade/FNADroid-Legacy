@@ -15,7 +15,7 @@ namespace FNADroid {
 			ASSERT = 7,
 		}
 		
-		[DllImport(FNADroidLib.nativeLibName, EntryPoint="Log")]
+		[DllImport(FNADroidLib.nativeLibName, EntryPoint = "Log")]
 		public static extern int Line(Level priority, string tag, string msg);
 		
 		public static int v(string tag, string msg) { return Line(Level.VERBOSE, tag, msg); }

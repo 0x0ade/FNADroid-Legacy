@@ -40,6 +40,8 @@ namespace FNADroid {
 			//Automatic maximum currently enabled for testing / demonstration purposes.
 			Environment.SetEnvironmentVariable("FNA_TOUCH_FORCE_MAXIMUM", "0");
 			
+			FNADroidPlatform.Boot();
+			
 			Assembly.LoadFrom(Path.Combine(FNADroidLib.GetGamePath(), "game.exe")).EntryPoint.Invoke(null, new object[] { new string[] { /*args*/ } });
 		}
 		

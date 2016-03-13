@@ -6,7 +6,7 @@ namespace FNADroid {
 	
 	public static class Accelerometer {
 		
-		[DllImport(FNADroidLib.nativeLibName, EntryPoint="AccelerometerAvailable")]
+		[DllImport(FNADroidLib.nativeLibName, EntryPoint = "AccelerometerAvailable")]
 		private static extern bool INTERNAL_IsAvailable();
 		public static bool IsAvailable {
 			get {
@@ -32,7 +32,7 @@ namespace FNADroid {
 		}
 		public static event Action<Vector3> DataChanged;
 		
-		[DllImport(FNADroidLib.nativeLibName, EntryPoint="GetAccelerometerAxis")]
+		[DllImport(FNADroidLib.nativeLibName, EntryPoint = "GetAccelerometerAxis")]
 		public static extern float GetAxis(int axis);
 		
 	}

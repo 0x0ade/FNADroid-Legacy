@@ -26,188 +26,234 @@
 
 //cpp to j
 
+#ifndef FNADROID_DESKTOP
+jclass com_angelde_fnadroid_FNADroidWrapper;
+jclass getFNADroidClass() {
+    if (com_angelde_fnadroid_FNADroidWrapper == NULL) {
+        com_angelde_fnadroid_FNADroidWrapper = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
+    }
+    return com_angelde_fnadroid_FNADroidWrapper;
+}
+
+#define DEFMID(N) jmethodID N ## ID;
+#define GETMID(N,T) if (! N ## ID) N ## ID = jnienv->GetStaticMethodID(clazz, #N , T ); jmethodID mID = N ## ID ;
+
+#else
+#define DEFMID(N)
+#define GETMID(N,T)
+#endif
+
+DEFMID(showMsg)
 void showMsg(const char* title, const char* msg) {
 #ifndef FNADROID_DESKTOP
     jstring jsTitle = jnienv->NewStringUTF(title);
     jstring jsMsg = jnienv->NewStringUTF(msg);
-    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
-    jmethodID showMsgID = jnienv->GetStaticMethodID(clazz, "showMsg", "(Ljava/lang/String;Ljava/lang/String;)V");
-    jnienv->CallStaticVoidMethod(clazz, showMsgID, jsTitle, jsMsg);
+    jclass clazz = getFNADroidClass();
+    GETMID(showMsg, "(Ljava/lang/String;Ljava/lang/String;)V")
+    jnienv->CallStaticVoidMethod(clazz, mID, jsTitle, jsMsg);
     jnienv->DeleteLocalRef(jsTitle);
     jnienv->DeleteLocalRef(jsMsg);
 #endif
 }
+DEFMID(showDebug)
 void showDebug(const char* msg) {
 #ifndef FNADROID_DESKTOP
     jstring jsMsg = jnienv->NewStringUTF(msg);
-    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
-    jmethodID showMsgID = jnienv->GetStaticMethodID(clazz, "showDebug", "(Ljava/lang/String;)V");
-    jnienv->CallStaticVoidMethod(clazz, showMsgID, jsMsg);
+    jclass clazz = getFNADroidClass();
+    GETMID(showDebug, "(Ljava/lang/String;)V")
+    jnienv->CallStaticVoidMethod(clazz, mID, jsMsg);
     jnienv->DeleteLocalRef(jsMsg);
 #endif
 }
+DEFMID(showError)
 void showError(const char* msg) {
 #ifndef FNADROID_DESKTOP
     jstring jsMsg = jnienv->NewStringUTF(msg);
-    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
-    jmethodID showMsgID = jnienv->GetStaticMethodID(clazz, "showError", "(Ljava/lang/String;)V");
-    jnienv->CallStaticVoidMethod(clazz, showMsgID, jsMsg);
+    jclass clazz = getFNADroidClass();
+    GETMID(showError, "(Ljava/lang/String;)V")
+    jnienv->CallStaticVoidMethod(clazz, mID, jsMsg);
     jnienv->DeleteLocalRef(jsMsg);
 #endif
 }
 
 char* getGamePath() {
-    return fnadir;
+    return strdup(fnadir);
 }
 char* getHomePath() {
-    return homedir;
+    return strdup(homedir);
 }
+DEFMID(getPackageName)
 char* getPackageName() {
 #ifndef FNADROID_DESKTOP
-    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
-    jmethodID mID = jnienv->GetStaticMethodID(clazz, "getPackageName", "()Ljava/lang/String;");
+    jclass clazz = getFNADroidClass();
+    GETMID(getPackageName, "()Ljava/lang/String;")
     jstring jsVal = (jstring) jnienv->CallStaticObjectMethod(clazz, mID);
     const char* val = jnienv->GetStringUTFChars(jsVal, 0);
     char* valdup = strdup(val); //TODO is that duplication required?!
     jnienv->ReleaseStringUTFChars(jsVal, val);
+    jnienv->DeleteLocalRef(jsVal);
     return valdup;
 #else
     return strdup("com.angelde.fnadroid.desktop");
 #endif
 }
+DEFMID(getDataPath)
 char* getDataPath() {
 #ifndef FNADROID_DESKTOP
-    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
-    jmethodID mID = jnienv->GetStaticMethodID(clazz, "getDataPath", "()Ljava/lang/String;");
+    jclass clazz = getFNADroidClass();
+    GETMID(getDataPath, "()Ljava/lang/String;")
     jstring jsVal = (jstring) jnienv->CallStaticObjectMethod(clazz, mID);
     const char* val = jnienv->GetStringUTFChars(jsVal, 0);
     char* valdup = strdup(val); //TODO is that duplication required?!
     jnienv->ReleaseStringUTFChars(jsVal, val);
+    jnienv->DeleteLocalRef(jsVal);
     return valdup;
 #else
     return strdup(".");
 #endif
 }
+DEFMID(getMainObbPath)
 char* getMainObbPath() {
 #ifndef FNADROID_DESKTOP
-    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
-    jmethodID mID = jnienv->GetStaticMethodID(clazz, "getMainObbPath", "()Ljava/lang/String;");
+    jclass clazz = getFNADroidClass();
+    GETMID(getMainObbPath, "()Ljava/lang/String;");
     jstring jsVal = (jstring) jnienv->CallStaticObjectMethod(clazz, mID);
     const char* val = jnienv->GetStringUTFChars(jsVal, 0);
     char* valdup = strdup(val); //TODO is that duplication required?!
     jnienv->ReleaseStringUTFChars(jsVal, val);
+    jnienv->DeleteLocalRef(jsVal);
     return valdup;
 #else
     return strdup("main.obb");
 #endif
 }
+DEFMID(getPatchObbPath)
 char* getPatchObbPath() {
 #ifndef FNADROID_DESKTOP
-    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
-    jmethodID mID = jnienv->GetStaticMethodID(clazz, "getPatchObbPath", "()Ljava/lang/String;");
+    jclass clazz = getFNADroidClass();
+    GETMID(getPatchObbPath, "()Ljava/lang/String;")
     jstring jsVal = (jstring) jnienv->CallStaticObjectMethod(clazz, mID);
     const char* val = jnienv->GetStringUTFChars(jsVal, 0);
     char* valdup = strdup(val); //TODO is that duplication required?!
     jnienv->ReleaseStringUTFChars(jsVal, val);
+    jnienv->DeleteLocalRef(jsVal);
     return valdup;
 #else
     return strdup("patch.obb");
 #endif
 }
+DEFMID(getInstallerPackageName)
 char* getInstallerPackageName() {
 #ifndef FNADROID_DESKTOP
-    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
-    jmethodID mID = jnienv->GetStaticMethodID(clazz, "getInstallerPackageName", "()Ljava/lang/String;");
+    jclass clazz = getFNADroidClass();
+    GETMID(getInstallerPackageName, "()Ljava/lang/String;")
     jstring jsVal = (jstring) jnienv->CallStaticObjectMethod(clazz, mID);
     const char* val = jnienv->GetStringUTFChars(jsVal, 0);
     char* valdup = strdup(val); //TODO is that duplication required?!
     jnienv->ReleaseStringUTFChars(jsVal, val);
+    jnienv->DeleteLocalRef(jsVal);
     return valdup;
 #else
     return strdup("unknown");
 #endif
 }
+DEFMID(getMaximumGLES)
 int getMaximumGLES() {
 #ifndef FNADROID_DESKTOP
-    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
-    jmethodID mID = jnienv->GetStaticMethodID(clazz, "getMaximumGLES", "()I");
+    jclass clazz = getFNADroidClass();
+    GETMID(getMaximumGLES, "()I")
     return (int) jnienv->CallStaticIntMethod(clazz, mID);
 #else
     return 0x00020000;
 #endif
 }
 
+DEFMID(vibrationCancel)
 void vibrationCancel() {
 #ifndef FNADROID_DESKTOP
-    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
-    jmethodID mID = jnienv->GetStaticMethodID(clazz, "vibrationCancel", "()V");
+    jclass clazz = getFNADroidClass();
+    GETMID(vibrationCancel, "()V");
     jnienv->CallStaticVoidMethod(clazz, mID);
 #endif
 }
+DEFMID(vibrationAvailable)
 bool vibrationAvailable() {
 #ifndef FNADROID_DESKTOP
-    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
-    jmethodID mID = jnienv->GetStaticMethodID(clazz, "vibrationAvailable", "()Z");
+    jclass clazz = getFNADroidClass();
+    GETMID(vibrationAvailable, "()Z")
     return (bool) jnienv->CallStaticBooleanMethod(clazz, mID);
 #else
     return false;
 #endif
 }
+DEFMID(vibrate)
 void vibrate(long long milliseconds) {
 #ifndef FNADROID_DESKTOP
-    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
-    jmethodID mID = jnienv->GetStaticMethodID(clazz, "vibrate", "(J)V");
+    jclass clazz = getFNADroidClass();
+    GETMID(vibrate, "(J)V")
     jnienv->CallStaticVoidMethod(clazz, mID, (jlong) milliseconds);
 #endif
 }
 
+DEFMID(accelerometerAvailable)
 bool accelerometerAvailable() {
 #ifndef FNADROID_DESKTOP
-    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
-    jmethodID mID = jnienv->GetStaticMethodID(clazz, "accelerometerAvailable", "()Z");
+    jclass clazz = getFNADroidClass();
+    GETMID(accelerometerAvailable, "()Z")
     return (bool) jnienv->CallStaticBooleanMethod(clazz, mID);
 #else
     return false;
 #endif
 }
+DEFMID(getAccelerometerAxis)
 float getAccelerometerAxis(int axis) {
 #ifndef FNADROID_DESKTOP
-    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
-    jmethodID mID = jnienv->GetStaticMethodID(clazz, "getAccelerometerAxis", "(I)F");
+    jclass clazz = getFNADroidClass();
+    GETMID(getAccelerometerAxis, "(I)F")
     return (float) jnienv->CallStaticFloatMethod(clazz, mID, (jint) axis);
 #else
     return 0;
 #endif
 }
 
+DEFMID(gyroscopeAvailable)
 bool gyroscopeAvailable() {
 #ifndef FNADROID_DESKTOP
-    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
-    jmethodID mID = jnienv->GetStaticMethodID(clazz, "gyroscopeAvailable", "()Z");
+    jclass clazz = getFNADroidClass();
+    GETMID(gyroscopeAvailable, "()Z")
     return (bool) jnienv->CallStaticBooleanMethod(clazz, mID);
 #else
     return false;
 #endif
 }
+DEFMID(getGyroscopeRotationRateAxis)
 float getGyroscopeRotationRateAxis(int axis) {
 #ifndef FNADROID_DESKTOP
-    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
-    jmethodID mID = jnienv->GetStaticMethodID(clazz, "getGyroscopeRotationRateAxis", "(I)F");
+    jclass clazz = getFNADroidClass();
+    GETMID(getGyroscopeRotationRateAxis, "(I)F")
     return (float) jnienv->CallStaticFloatMethod(clazz, mID, (jint) axis);
 #else
     return 0;
 #endif
 }
 
+DEFMID(getMaximumTouchCount)
 int getMaximumTouchCount() {
 #ifndef FNADROID_DESKTOP
-    jclass clazz = jnienv->FindClass("com/angelde/fnadroid/FNADroidWrapper");
-    jmethodID mID = jnienv->GetStaticMethodID(clazz, "getMaximumTouchCount", "()I");
+    jclass clazz = getFNADroidClass();
+    GETMID(getMaximumTouchCount, "()I")
     return (int) jnienv->CallStaticIntMethod(clazz, mID);
 #else
     return 0;
 #endif
 }
+
+#ifdef DEFMID
+#undef DEFMID
+#endif
+#ifdef GETMID
+#undef GETMID
+#endif
 
 //m to c, c to cpp
 #ifdef __cplusplus
@@ -253,7 +299,7 @@ char* GetPatchObbPath() {
 char* GetInstallerPackageName() {
     return getInstallerPackageName();
 }
-int j_GetMaximumGLES() {
+int GetMaximumGLES() {
     return getMaximumGLES();
 }
 

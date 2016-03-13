@@ -30,7 +30,7 @@ namespace FNADroid {
 		public static extern string GetPatchObbPath();
 		[DllImport(nativeLibName)]
 		public static extern string GetInstallerPackageName();
-		[DllImport(nativeLibName)]
+		[DllImport(nativeLibName, EntryPoint = "GetMaximumGLES")]
 		private static extern int j_GetMaximumGLES();
 		public static int GetMaximumGLES() {
 			int esAndroid = j_GetMaximumGLES();

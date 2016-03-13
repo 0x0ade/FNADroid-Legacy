@@ -348,6 +348,8 @@ public class FNADroidWrapper {
         return 0;
     }
 
+    //unexposed methods
+
     public static void downloadObb(String path, final String type) {
         String url_ = "";
         String title_ = "";

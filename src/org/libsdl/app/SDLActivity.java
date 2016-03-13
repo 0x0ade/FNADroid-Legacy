@@ -19,6 +19,7 @@ import android.util.Log;
 import android.graphics.*;
 import android.media.*;
 import android.hardware.*;
+import com.angelde.fnadroid.FNADroidWrapper;
 
 /**
     SDL Activity

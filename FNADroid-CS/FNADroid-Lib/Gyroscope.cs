@@ -6,7 +6,7 @@ namespace FNADroid {
 	
 	public static class Gyroscope {
 		
-		[DllImport(FNADroidLib.nativeLibName, EntryPoint="GyroscopeAvailable")]
+		[DllImport(FNADroidLib.nativeLibName, EntryPoint = "GyroscopeAvailable")]
 		private static extern bool INTERNAL_IsAvailable();
 		public static bool IsAvailable {
 			get {
@@ -39,7 +39,7 @@ namespace FNADroid {
 		}
 		public static event Action<Vector3> RotationRateChanged;
 		
-		[DllImport(FNADroidLib.nativeLibName, EntryPoint="GetGyroscopeRotationRateAxis")]
+		[DllImport(FNADroidLib.nativeLibName, EntryPoint = "GetGyroscopeRotationRateAxis")]
 		public static extern float GetRotationRateAxis(int axis);
 		
 	}

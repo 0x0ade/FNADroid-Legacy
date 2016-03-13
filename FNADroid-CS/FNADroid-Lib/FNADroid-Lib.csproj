@@ -41,6 +41,7 @@
 	<Compile Include="Vibration.cs" />
 	<Compile Include="Accelerometer.cs" />
 	<Compile Include="Gyroscope.cs" />
+	<Compile Include="FNADroidPlatform.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

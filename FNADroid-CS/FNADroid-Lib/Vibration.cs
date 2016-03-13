@@ -6,7 +6,7 @@ namespace FNADroid {
 	
 	public static class Vibration {
 		
-		[DllImport(FNADroidLib.nativeLibName, EntryPoint="VibrationAvailable")]
+		[DllImport(FNADroidLib.nativeLibName, EntryPoint = "VibrationAvailable")]
 		private static extern bool INTERNAL_IsAvailable();
 		public static bool IsAvailable {
 			get {
@@ -14,10 +14,10 @@ namespace FNADroid {
 			}
 		}
 		
-		[DllImport(FNADroidLib.nativeLibName, EntryPoint="Vibrate")]
+		[DllImport(FNADroidLib.nativeLibName, EntryPoint = "Vibrate")]
 		public static extern void Vibrate(long milliseconds);
 		
-		[DllImport(FNADroidLib.nativeLibName, EntryPoint="VibrationCancel")]
+		[DllImport(FNADroidLib.nativeLibName, EntryPoint = "VibrationCancel")]
 		public static extern void Cancel();
 		
 	}
