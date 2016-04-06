@@ -12,6 +12,9 @@ gen
 # IntelliJ folder #
 .idea
 
+# VSCode non-config files
+browse.VC.db
+
 #FNADroid-CS
 FNADroid-CS/FNADroid-Lib/bin
 FNADroid-CS/FNADroid-Lib/out
