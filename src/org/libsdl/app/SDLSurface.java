@@ -1,39 +1,46 @@
 package org.libsdl.app;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.lang.reflect.Method;
 
 import android.app.*;
 import android.content.*;
+import android.text.InputType;
 import android.view.*;
 import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsoluteLayout;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.os.*;
 import android.util.Log;
+import android.util.SparseArray;
 import android.graphics.*;
+import android.graphics.drawable.Drawable;
 import android.media.*;
 import android.hardware.*;
+import android.content.pm.ActivityInfo;
 
 /**
- SDLSurface. This is what we draw on, so we need to know when it's created
- in order to do anything useful.
+    SDLSurface. This is what we draw on, so we need to know when it's created
+    in order to do anything useful.
 
- Because of this, that's where we set up the SDL thread
- */
+    Because of this, that's where we set up the SDL thread
+*/
 public class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
-        View.OnKeyListener, View.OnTouchListener, SensorEventListener {
+    View.OnKeyListener, View.OnTouchListener, SensorEventListener  {
 
     // Sensors
     protected static SensorManager mSensorManager;
-    public static SensorManager getSensorManager() {
-        return mSensorManager;
-    }
     protected static Display mDisplay;
 
     // Keep track of the surface size to normalize touch events
@@ -60,6 +67,19 @@ public class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
         // Some arbitrary defaults to avoid a potential division by zero
         mWidth = 1.0f;
         mHeight = 1.0f;
+    }
+
+    public void handlePause() {
+        enableSensor(Sensor.TYPE_ACCELEROMETER, false);
+    }
+
+    public void handleResume() {
+        setFocusable(true);
+        setFocusableInTouchMode(true);
+        requestFocus();
+        setOnKeyListener(this);
+        setOnTouchListener(this);
+        enableSensor(Sensor.TYPE_ACCELEROMETER, true);
     }
 
     public Surface getNativeSurface() {
@@ -91,53 +111,89 @@ public class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
 
         int sdlFormat = 0x15151002; // SDL_PIXELFORMAT_RGB565 by default
         switch (format) {
-            case PixelFormat.A_8:
-                Log.v("SDL", "pixel format A_8");
-                break;
-            case PixelFormat.LA_88:
-                Log.v("SDL", "pixel format LA_88");
-                break;
-            case PixelFormat.L_8:
-                Log.v("SDL", "pixel format L_8");
-                break;
-            case PixelFormat.RGBA_4444:
-                Log.v("SDL", "pixel format RGBA_4444");
-                sdlFormat = 0x15421002; // SDL_PIXELFORMAT_RGBA4444
-                break;
-            case PixelFormat.RGBA_5551:
-                Log.v("SDL", "pixel format RGBA_5551");
-                sdlFormat = 0x15441002; // SDL_PIXELFORMAT_RGBA5551
-                break;
-            case PixelFormat.RGBA_8888:
-                Log.v("SDL", "pixel format RGBA_8888");
-                sdlFormat = 0x16462004; // SDL_PIXELFORMAT_RGBA8888
-                break;
-            case PixelFormat.RGBX_8888:
-                Log.v("SDL", "pixel format RGBX_8888");
-                sdlFormat = 0x16261804; // SDL_PIXELFORMAT_RGBX8888
-                break;
-            case PixelFormat.RGB_332:
-                Log.v("SDL", "pixel format RGB_332");
-                sdlFormat = 0x14110801; // SDL_PIXELFORMAT_RGB332
-                break;
-            case PixelFormat.RGB_565:
-                Log.v("SDL", "pixel format RGB_565");
-                sdlFormat = 0x15151002; // SDL_PIXELFORMAT_RGB565
-                break;
-            case PixelFormat.RGB_888:
-                Log.v("SDL", "pixel format RGB_888");
-                // Not sure this is right, maybe SDL_PIXELFORMAT_RGB24 instead?
-                sdlFormat = 0x16161804; // SDL_PIXELFORMAT_RGB888
-                break;
-            default:
-                Log.v("SDL", "pixel format unknown " + format);
-                break;
+        case PixelFormat.A_8:
+            Log.v("SDL", "pixel format A_8");
+            break;
+        case PixelFormat.LA_88:
+            Log.v("SDL", "pixel format LA_88");
+            break;
+        case PixelFormat.L_8:
+            Log.v("SDL", "pixel format L_8");
+            break;
+        case PixelFormat.RGBA_4444:
+            Log.v("SDL", "pixel format RGBA_4444");
+            sdlFormat = 0x15421002; // SDL_PIXELFORMAT_RGBA4444
+            break;
+        case PixelFormat.RGBA_5551:
+            Log.v("SDL", "pixel format RGBA_5551");
+            sdlFormat = 0x15441002; // SDL_PIXELFORMAT_RGBA5551
+            break;
+        case PixelFormat.RGBA_8888:
+            Log.v("SDL", "pixel format RGBA_8888");
+            sdlFormat = 0x16462004; // SDL_PIXELFORMAT_RGBA8888
+            break;
+        case PixelFormat.RGBX_8888:
+            Log.v("SDL", "pixel format RGBX_8888");
+            sdlFormat = 0x16261804; // SDL_PIXELFORMAT_RGBX8888
+            break;
+        case PixelFormat.RGB_332:
+            Log.v("SDL", "pixel format RGB_332");
+            sdlFormat = 0x14110801; // SDL_PIXELFORMAT_RGB332
+            break;
+        case PixelFormat.RGB_565:
+            Log.v("SDL", "pixel format RGB_565");
+            sdlFormat = 0x15151002; // SDL_PIXELFORMAT_RGB565
+            break;
+        case PixelFormat.RGB_888:
+            Log.v("SDL", "pixel format RGB_888");
+            // Not sure this is right, maybe SDL_PIXELFORMAT_RGB24 instead?
+            sdlFormat = 0x16161804; // SDL_PIXELFORMAT_RGB888
+            break;
+        default:
+            Log.v("SDL", "pixel format unknown " + format);
+            break;
         }
 
         mWidth = width;
         mHeight = height;
-        SDLActivity.onNativeResize(width, height, sdlFormat);
-        Log.v("SDL", "Window size:" + width + "x"+height);
+        SDLActivity.onNativeResize(width, height, sdlFormat, mDisplay.getRefreshRate());
+        Log.v("SDL", "Window size: " + width + "x" + height);
+
+ 
+        boolean skip = false;
+        int requestedOrientation = SDLActivity.mSingleton.getRequestedOrientation();
+
+        if (requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED)
+        {
+            // Accept any
+        }
+        else if (requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
+        {
+            if (mWidth > mHeight) {
+               skip = true;
+            }
+        } else if (requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
+            if (mWidth < mHeight) {
+               skip = true;
+            }
+        }
+
+        // Special Patch for Square Resolution: Black Berry Passport
+        if (skip) {
+           double min = Math.min(mWidth, mHeight);
+           double max = Math.max(mWidth, mHeight);
+           
+           if (max / min < 1.20) {
+              Log.v("SDL", "Don't skip on such aspect-ratio. Could be a square resolution.");
+              skip = false;
+           }
+        }
+
+        if (skip) {
+           Log.v("SDL", "Skip .. Surface is not ready.");
+           return;
+        }
+
 
         // Set mIsSurfaceReady to 'true' *before* making a call to handleResume
         SDLActivity.mIsSurfaceReady = true;
@@ -148,17 +204,16 @@ public class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
             // This is the entry point to the C app.
             // Start up the C app thread and enable sensor input for the first time
 
-            SDLActivity.mSDLThread = new Thread(new SDLMain(), "SDLThread");
+            final Thread sdlThread = new Thread(new SDLMain(), "SDLThread");
             enableSensor(Sensor.TYPE_ACCELEROMETER, true);
-            com.angelde.fnadroid.FNADroidWrapper.hookedEnableAdditionalSensors(this, true);
-            SDLActivity.mSDLThread.start();
+            sdlThread.start();
 
             // Set up a listener thread to catch when the native thread ends
-            new Thread(new Runnable(){
+            SDLActivity.mSDLThread = new Thread(new Runnable(){
                 @Override
                 public void run(){
                     try {
-                        SDLActivity.mSDLThread.join();
+                        sdlThread.join();
                     }
                     catch(Exception e){}
                     finally{
@@ -168,14 +223,14 @@ public class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
                         }
                     }
                 }
-            }).start();
+            }, "SDLThreadListener");
+            SDLActivity.mSDLThread.start();
+        }
+
+        if (SDLActivity.mHasFocus) {
+            SDLActivity.handleResume();
         }
     }
-
-    // unused
-    @Override
-    public void onDraw(Canvas canvas) {}
-
 
     // Key events
     @Override
@@ -184,8 +239,8 @@ public class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
         // Some SOURCE_DPAD or SOURCE_GAMEPAD are also SOURCE_KEYBOARD
         // So, we try to process them as DPAD or GAMEPAD events first, if that fails we try them as KEYBOARD
 
-        if ( (event.getSource() & 0x00000401) != 0 || /* API 12: SOURCE_GAMEPAD */
-                (event.getSource() & InputDevice.SOURCE_DPAD) != 0 ) {
+        if ( (event.getSource() & InputDevice.SOURCE_GAMEPAD) != 0 ||
+                   (event.getSource() & InputDevice.SOURCE_DPAD) != 0 ) {
             if (event.getAction() == KeyEvent.ACTION_DOWN) {
                 if (SDLActivity.onNativePadDown(event.getDeviceId(), keyCode) == 0) {
                     return true;
@@ -221,60 +276,95 @@ public class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
         final int pointerCount = event.getPointerCount();
         int action = event.getActionMasked();
         int pointerFingerId;
+        int mouseButton;
         int i = -1;
         float x,y,p;
 
-        switch(action) {
-            case MotionEvent.ACTION_MOVE:
-                for (i = 0; i < pointerCount; i++) {
+        // !!! FIXME: dump this SDK check after 2.0.4 ships and require API14.
+        if (event.getSource() == InputDevice.SOURCE_MOUSE && SDLActivity.mSeparateMouseAndTouch) {
+            if (Build.VERSION.SDK_INT < 14) {
+                mouseButton = 1;    // For Android==12 all mouse buttons are the left button
+            } else {
+                try {
+                    mouseButton = (Integer) event.getClass().getMethod("getButtonState").invoke(event);
+                } catch(Exception e) {
+                    mouseButton = 1;    // oh well.
+                }
+            }
+            SDLActivity.onNativeMouse(mouseButton, action, event.getX(0), event.getY(0));
+        } else {
+            switch(action) {
+                case MotionEvent.ACTION_MOVE:
+                    for (i = 0; i < pointerCount; i++) {
+                        pointerFingerId = event.getPointerId(i);
+                        x = event.getX(i) / mWidth;
+                        y = event.getY(i) / mHeight;
+                        p = event.getPressure(i);
+                        if (p > 1.0f) {
+                            // may be larger than 1.0f on some devices
+                            // see the documentation of getPressure(i)
+                            p = 1.0f;
+                        }
+                        SDLActivity.onNativeTouch(touchDevId, pointerFingerId, action, x, y, p);
+                    }
+                    break;
+
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_DOWN:
+                    // Primary pointer up/down, the index is always zero
+                    i = 0;
+                case MotionEvent.ACTION_POINTER_UP:
+                case MotionEvent.ACTION_POINTER_DOWN:
+                    // Non primary pointer up/down
+                    if (i == -1) {
+                        i = event.getActionIndex();
+                    }
+
                     pointerFingerId = event.getPointerId(i);
                     x = event.getX(i) / mWidth;
                     y = event.getY(i) / mHeight;
                     p = event.getPressure(i);
+                    if (p > 1.0f) {
+                        // may be larger than 1.0f on some devices
+                        // see the documentation of getPressure(i)
+                        p = 1.0f;
+                    }
                     SDLActivity.onNativeTouch(touchDevId, pointerFingerId, action, x, y, p);
-                }
-                break;
+                    break;
 
-            case MotionEvent.ACTION_UP:
-            case MotionEvent.ACTION_DOWN:
-                // Primary pointer up/down, the index is always zero
-                i = 0;
-            case MotionEvent.ACTION_POINTER_UP:
-            case MotionEvent.ACTION_POINTER_DOWN:
-                // Non primary pointer up/down
-                if (i == -1) {
-                    i = event.getActionIndex();
-                }
+                case MotionEvent.ACTION_CANCEL:
+                    for (i = 0; i < pointerCount; i++) {
+                        pointerFingerId = event.getPointerId(i);
+                        x = event.getX(i) / mWidth;
+                        y = event.getY(i) / mHeight;
+                        p = event.getPressure(i);
+                        if (p > 1.0f) {
+                            // may be larger than 1.0f on some devices
+                            // see the documentation of getPressure(i)
+                            p = 1.0f;
+                        }
+                        SDLActivity.onNativeTouch(touchDevId, pointerFingerId, MotionEvent.ACTION_UP, x, y, p);
+                    }
+                    break;
 
-                pointerFingerId = event.getPointerId(i);
-                x = event.getX(i) / mWidth;
-                y = event.getY(i) / mHeight;
-                p = event.getPressure(i);
-                SDLActivity.onNativeTouch(touchDevId, pointerFingerId, action, x, y, p);
-                break;
-
-            default:
-                break;
+                default:
+                    break;
+            }
         }
 
         return true;
-    }
+   }
 
     // Sensor events
     public void enableSensor(int sensortype, boolean enabled) {
         // TODO: This uses getDefaultSensor - what if we have >1 accels?
-        Sensor sensor = mSensorManager.getDefaultSensor(sensortype);
-        if (sensor == null) {
-            // Nothing to do here - this device doesn't support the sensor.
-            return;
-        }
         if (enabled) {
             mSensorManager.registerListener(this,
-                    sensor,
-                    SensorManager.SENSOR_DELAY_GAME, null);
+                            mSensorManager.getDefaultSensor(sensortype),
+                            SensorManager.SENSOR_DELAY_GAME, null);
         } else {
             mSensorManager.unregisterListener(this,
-                    sensor);
+                            mSensorManager.getDefaultSensor(sensortype));
         }
     }
 
@@ -306,9 +396,13 @@ public class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
                     break;
             }
             SDLActivity.onNativeAccel(-x / SensorManager.GRAVITY_EARTH,
-                    y / SensorManager.GRAVITY_EARTH,
-                    event.values[2] / SensorManager.GRAVITY_EARTH - 1);
+                                      y / SensorManager.GRAVITY_EARTH,
+                                      event.values[2] / SensorManager.GRAVITY_EARTH - 1);
         }
-        com.angelde.fnadroid.FNADroidWrapper.hookedOnSensorChanged(event);
     }
+
+    public static SensorManager getSensorManager() {
+        return mSensorManager;
+    }
+
 }

@@ -1,0 +1,79 @@
+diff --git a/mojoshader.c b/mojoshader.c
+index 90f0cf9..d897637 100644
+--- a/mojoshader.c
++++ b/mojoshader.c
+@@ -2205,9 +2205,11 @@ static void emit_GLSL_start(Context *ctx, const char *profilestr)
+         else
+             output_line(ctx, "precision mediump float;");
+         output_line(ctx, "precision mediump int;");
+-        output_line(ctx, "varying vec4 v_FrontColor;");
+-        output_line(ctx, "varying vec4 v_FrontSecondaryColor;");
+-        output_line(ctx, "varying vec4 v_TexCoord[10];"); // 10 according to SM3
++        // Some drivers don't like it when the precision varies between shaders. -ade
++        output_line(ctx, "varying highp vec4 v_FrontColor;");
++        output_line(ctx, "varying highp vec4 v_FrontSecondaryColor;");
++        output_line(ctx, "varying highp vec4 v_TexCoord[10];"); // 10 according to SM3
++
+         pop_output(ctx);
+     } // else if
+     #endif
+@@ -2309,6 +2311,7 @@ static void emit_GLSL_finalize(Context *ctx)
+ 
+ static void emit_GLSL_global(Context *ctx, RegisterType regtype, int regnum)
+ {
++    const char *usage_str = NULL;
+     char varname[64];
+     get_GLSL_varname_in_buf(ctx, regtype, regnum, varname, sizeof (varname));
+ 
+@@ -2325,8 +2328,14 @@ static void emit_GLSL_global(Context *ctx, RegisterType regtype, int regnum)
+                 //  ps_1_1 TEX opcode expects to overwrite it.
+                 if (!shader_version_atleast(ctx, 1, 4))
+                 {
+-                    output_line(ctx, "vec4 %s = gl_TexCoord[%d];",
+-                                varname, regnum);
++#if SUPPORT_PROFILE_GLSLES
++                    if (support_glsles(ctx))
++                        usage_str = "v_TexCoord";
++                    else
++#endif
++                    usage_str = "gl_TexCoord";
++                    output_line(ctx, "vec4 %s = %s[%d];",
++                                varname, usage_str, regnum);
+                 } // if
+             } // else if
+             break;
+diff --git a/mojoshader_opengl.c b/mojoshader_opengl.c
+index 49b45e2..a7d65bb 100644
+--- a/mojoshader_opengl.c
++++ b/mojoshader_opengl.c
+@@ -726,7 +726,7 @@ static void impl_ARB1_DeleteShader(const GLuint _shader)
+ static void impl_ARB1_DeleteProgram(const GLuint program)
+ {
+     // no-op. ARB1 doesn't have real linked programs.
+-} // impl_GLSL_DeleteProgram
++} // impl_ARB1_DeleteProgram
+ 
+ static GLint impl_ARB1_GetUniformLocation(MOJOSHADER_glProgram *program,
+                                           MOJOSHADER_glShader *shader, int idx)
+@@ -1074,8 +1074,10 @@ static void detect_glsl_version(void)
+         const char *str = (const char *) ctx->glGetString(enumval);
+         if (ctx->glGetError() == GL_INVALID_ENUM)
+             str = NULL;
+-        if (strstr(str, "OpenGL ES GLSL ES "))
+-            str += 18;
++        if (strstr(str, "OpenGL ES GLSL "))
++            str += 15;
++        if (strstr(str, "ES "))
++            str += 3;
+         parse_opengl_version_str(str, &ctx->glsl_major, &ctx->glsl_minor);
+     } // if
+ #endif
+@@ -1279,7 +1281,7 @@ static int valid_profile(const char *profile)
+     #if SUPPORT_PROFILE_GLSLES
+     else if (strcmp(profile, MOJOSHADER_PROFILE_GLSLES) == 0)
+     {
+-        MUST_HAVE_GLSL(MOJOSHADER_PROFILE_GLSLES, 1, 10);
++        MUST_HAVE_GLSL(MOJOSHADER_PROFILE_GLSLES, 1, 00);
+     } // else if
+     #endif
+ 

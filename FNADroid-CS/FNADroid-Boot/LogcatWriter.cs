@@ -27,8 +27,8 @@ namespace FNADroid {
 			string complete = builder.ToString();
 			builder.Clear();
 			int pos = 0;
-			while ((nl = complete.IndexOf('\n', pos)) > 0) {
-				Log.Line(Level, Tag, complete.Substring(pos, nl));
+			while (0 <= (nl = complete.IndexOf('\n', pos))) {
+				Log.Line(Level, Tag, complete.Substring(pos, nl - pos));
 				pos = nl + 1;
 			}
 			if (pos + 1 < complete.Length) {

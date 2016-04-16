@@ -10,7 +10,7 @@ TARGET_PLATFORM := 14
 TARGET_ARCH_ABI := armeabi-v7a
 LOCAL_MODULE    := mojoshader
 LOCAL_SRC_FILES := mojoshader/mojoshader.c mojoshader/mojoshader_common.c mojoshader/mojoshader_effects.c mojoshader/mojoshader_opengl.c
-LOCAL_LDLIBS    := -landroid -lEGL -lGLESv2 -lm -ldl
+LOCAL_LDLIBS    := -lEGL -lGLESv2 -lm -ldl
 LOCAL_CFLAGS += -Ijni/mojoshader/GL \
     -DMOJOSHADER_NO_VERSION_INCLUDE \
     -DMOJOSHADER_EFFECT_SUPPORT \
@@ -61,8 +61,8 @@ TARGET_ARCH_ABI := armeabi-v7a
 LOCAL_MODULE    := fnadroid-wrapper
 #FIXME update to ndk 10e+ and add fnadroid-glue.cpp back
 LOCAL_SRC_FILES := fnadroid-wrapper.cpp SDL_android_main.c
-LOCAL_LDLIBS    := -llog -landroid -lEGL -lGLESv2 -Wl,-rpath,/sdcard/Android/data/com.angelde.fnadroid/mono/lib -Wl,--export-dynamic -lm -ldl
-LOCAL_STATIC_LIBRARIES := android_native_app_glue
+LOCAL_LDLIBS    := -llog -landroid -Wl,-rpath,/sdcard/Android/data/com.angelde.fnadroid/mono/lib -Wl,--export-dynamic -lm -ldl
+#LOCAL_STATIC_LIBRARIES := android_native_app_glue
 LOCAL_SHARED_LIBRARIES := vorbis openal SDL2 monosgen-2.0
 LOCAL_CFLAGS += -I/sdcard/Android/data/com.angelde.fnadroid/mono/include/mono-2.0 -I../../sdl/include -Iinclude -D_REENTRANT
 include $(BUILD_SHARED_LIBRARY)
