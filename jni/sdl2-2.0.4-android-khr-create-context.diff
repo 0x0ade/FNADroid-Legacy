@@ -1,0 +1,53 @@
+diff -r sdl/Android.mk SDL2-2.0.4/Android.mk
+49c49
+< LOCAL_CFLAGS += -DGL_GLEXT_PROTOTYPES -DEGL_KHR_create_context
+---
+> LOCAL_CFLAGS += -DGL_GLEXT_PROTOTYPES
+diff -r sdl/src/video/SDL_egl.c SDL2-2.0.4/src/video/SDL_egl.c
+35,74d34
+< /* The Android build target defines EGL_KHR_create_context in Android.mk (wasn't defined elsewhere).
+<  * To fix this, the following definitions were copied from include/SDL_egl.h
+<  * Blame me if your {phone,tablet,tv,watch,car} blows up. -ade
+<  */
+< #ifndef EGL_CONTEXT_MAJOR_VERSION_KHR
+< #define EGL_CONTEXT_MAJOR_VERSION_KHR 0x3098
+< #endif
+< #ifndef EGL_CONTEXT_MINOR_VERSION_KHR
+< #define EGL_CONTEXT_MINOR_VERSION_KHR 0x30FB
+< #endif
+< #ifndef EGL_CONTEXT_FLAGS_KHR
+< #define EGL_CONTEXT_FLAGS_KHR 0x30FC
+< #endif
+< #ifndef EGL_CONTEXT_OPENGL_PROFILE_MASK_KHR
+< #define EGL_CONTEXT_OPENGL_PROFILE_MASK_KHR 0x30FD
+< #endif
+< #ifndef EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_KHR
+< #define EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_KHR 0x31BD
+< #endif
+< #ifndef EGL_NO_RESET_NOTIFICATION_KHR
+< #define EGL_NO_RESET_NOTIFICATION_KHR 0x31BE
+< #endif
+< #ifndef EGL_LOSE_CONTEXT_ON_RESET_KHR
+< #define EGL_LOSE_CONTEXT_ON_RESET_KHR 0x31BF
+< #endif
+< #ifndef EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR
+< #define EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR 0x00000001
+< #endif
+< #ifndef EGL_CONTEXT_OPENGL_FORWARD_COMPATIBLE_BIT_KHR
+< #define EGL_CONTEXT_OPENGL_FORWARD_COMPATIBLE_BIT_KHR 0x00000002
+< #endif
+< #ifndef EGL_CONTEXT_OPENGL_ROBUST_ACCESS_BIT_KHR
+< #define EGL_CONTEXT_OPENGL_ROBUST_ACCESS_BIT_KHR 0x00000004
+< #endif
+< #ifndef EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT_KHR
+< #define EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT_KHR 0x00000001
+< #endif
+< #ifndef EGL_CONTEXT_OPENGL_COMPATIBILITY_PROFILE_BIT_KHR
+< #define EGL_CONTEXT_OPENGL_COMPATIBILITY_PROFILE_BIT_KHR 0x00000002
+< #endif
+483,485c443
+<     //PATCHNOTE/ Patch note: major_version <= 2 has been added to force EGL_KHR_create_context usage on ES 3.0+.
+<     //PATCHNOTE/ Feel free to remove this patchnote.
+<     if ((major_version < 3 || (major_version <= 2 && minor_version == 0 && profile_es)) &&
+---
+>     if ((major_version < 3 || (minor_version == 0 && profile_es)) &&
