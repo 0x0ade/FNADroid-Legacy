@@ -37,6 +37,12 @@ TARGET_ARCH_ABI := armeabi-v7a
 include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
+LOCAL_MODULE := SDL2_image
+LOCAL_SRC_FILES := libs/libSDL2_image.so
+TARGET_ARCH_ABI := armeabi-v7a
+include $(PREBUILT_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
 LOCAL_MODULE := openal
 LOCAL_SRC_FILES := libs/libopenal.so
 TARGET_ARCH_ABI := armeabi-v7a
