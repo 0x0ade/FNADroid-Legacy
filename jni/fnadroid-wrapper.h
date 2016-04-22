@@ -10,9 +10,9 @@
 #define  LOGW(...)  __android_log_print(ANDROID_LOG_WARN,LOG_TAG,__VA_ARGS__)
 #define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
 #else
-#define  LOGI(...)  printf("[FNADroid] I: %s\n", __VA_ARGS__)
-#define  LOGW(...)  printf("[FNADroid] W: %s\n", __VA_ARGS__)
-#define  LOGE(...)  printf("[FNADroid] E: %s\n", __VA_ARGS__)
+#define  LOGI(...)  printf("[I][FNADroid-Desktop] %s\n", __VA_ARGS__)
+#define  LOGW(...)  printf("[W][FNADroid-Desktop] %s\n", __VA_ARGS__)
+#define  LOGE(...)  printf("[E][FNADroid-Desktop] %s\n", __VA_ARGS__)
 #endif
 
 #include <mono/jit/jit.h>

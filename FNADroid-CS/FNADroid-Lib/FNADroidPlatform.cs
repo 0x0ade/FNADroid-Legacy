@@ -228,14 +228,22 @@ namespace FNADroid {
 		}
 		
 		public static void Hook(string name) {
+			Log("FNADroidPlatform hooking " + name);
+			
 			Type tt = typeof(FNADroidPlatform);
 			FieldInfo tf = tt.GetField("fna_" + name);
 			
 			Assembly asm = Assembly.GetAssembly(typeof(Game));
 			Type t = asm.GetType("Microsoft.Xna.Framework.FNAPlatform");
 			FieldInfo f = t.GetField(name);
+			if (f == null) {
+				Log("Can't hook " + name + ": Original field not found!");
+				return;
+			}
 			
-			tf.SetValue(null, f.GetValue(null));
+			if (tf != null) {
+				tf.SetValue(null, f.GetValue(null));
+			}
 			f.SetValue(null, Delegate.CreateDelegate(asm.GetType("Microsoft.Xna.Framework.FNAPlatform+" + name + "Func"), tt.GetMethod(name)));
 		}
 		

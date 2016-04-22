@@ -14,7 +14,7 @@ gen
 
 # VSCode non-config files
 browse.VC.db
-.vscode/.browse.VC.db
+.vscode/.browse.VC.db*
 
 #FNADroid-CS
 FNADroid-CS/FNADroid-Lib/bin
