@@ -14,26 +14,15 @@ fnadroid-runner.o: fnadroid-wrapper fnadroid-runner.c
 	fnadroid-runner.c \
 	-I../jni $(shell pkg-config --cflags mono-2)
 
-fnadroid-wrapper: fnadroid-wrapper.o fnadroid-glue-mono.o
+fnadroid-wrapper: fnadroid-wrapper.objs
 	gcc -shared -Wall -Wl,-rpath,. -o libfnadroid-wrapper.so fnadroid-wrapper.o fnadroid-glue-mono.o $(MONO-2-LIBS)
 
-fnadroid-wrapper.o: ../jni/fnadroid-wrapper.c
+fnadroid-wrapper.objs: ../jni/fnadroid-wrapper.c ../jni/fnadroid-glue-mono.c
 	gcc -c -fpic -Wall \
 	-DFNADROID_DESKTOP \
 	../jni/fnadroid-wrapper.c \
-	$(shell pkg-config --cflags mono-2)
-
-fnadroid-glue-mono.o: ../jni/fnadroid-glue-mono.c
-	gcc -c -fpic -Wall \
-	-DFNADROID_DESKTOP \
 	../jni/fnadroid-glue-mono.c \
 	$(shell pkg-config --cflags mono-2)
 
-#fnadroid-glue-java.o: ../jni/fnadroid-glue-java.c
-#	gcc -c -fpic -Wall \
-#	-DFNADROID_DESKTOP \
-#	../jni/fnadroid-glue-java.c \
-#	$(shell pkg-config --cflags mono-2)
-
 clean:
-	rm fnadroid-runner fnadroid-runner.o libfnadroid-wrapper.so fnadroid-wrapper.o fnadroid-glue-mono.o
+	rm -f fnadroid-runner fnadroid-runner.o libfnadroid-wrapper.so fnadroid-wrapper.o fnadroid-glue-mono.o fnadroid-aotgen.o

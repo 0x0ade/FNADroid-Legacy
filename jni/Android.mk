@@ -65,11 +65,19 @@ include $(CLEAR_VARS)
 TARGET_PLATFORM := 14
 TARGET_ARCH_ABI := armeabi-v7a
 LOCAL_MODULE    := fnadroid-wrapper
-LOCAL_SRC_FILES := fnadroid-wrapper.c fnadroid-glue-mono.c fnadroid-glue-java.c SDL_android_main.c
+LOCAL_SRC_FILES := fnadroid-aotgen.c fnadroid-wrapper.c fnadroid-glue-mono.c fnadroid-glue-java.c SDL_android_main.c
 LOCAL_LDLIBS    := -llog -landroid -Wl,-rpath,/sdcard/Android/data/com.angelde.fnadroid/mono/lib -Wl,--export-dynamic -lm -ldl
 #LOCAL_STATIC_LIBRARIES := android_native_app_glue
 LOCAL_SHARED_LIBRARIES := vorbis openal SDL2 monosgen-2.0
-LOCAL_CFLAGS += -I/sdcard/Android/data/com.angelde.fnadroid/mono/include/mono-2.0 -I../../sdl/include -Iinclude -D_REENTRANT
+#Change the addresses when using your own copy of Mono / updating!
+LOCAL_CFLAGS += -I/sdcard/Android/data/com.angelde.fnadroid/mono/include/mono-2.0 \
+    -I../../sdl/include \
+    -Iinclude \
+    -D_REENTRANT \
+    -DADDR_parse_optimizations=0x000f7c08 \
+    -DADDR_mono_compile_assembly=0x00118438 \
+    -DADDR_BASE=0x000f827c \
+    -DFUNC_BASE=mono_parse_default_optimizations
 include $(BUILD_SHARED_LIBRARY)
 
 $(call import-module,android/native_app_glue)

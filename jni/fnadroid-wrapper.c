@@ -1,4 +1,7 @@
 #include "fnadroid-wrapper.h"
+#ifndef FNADROID_DESKTOP
+#include "fnadroid-aotgen.h"
+#endif
 
 #include <errno.h>
 #include <math.h>
@@ -25,6 +28,13 @@
 #include <mono/metadata/debug-helpers.h>
 #include <mono/utils/mono-logger.h>
 
+#ifdef TEST_CALL_HIDDEN
+//alt.: static
+__attribute__((visibility("hidden"))) int h_add(int a, int b) {
+    return a + b;
+}
+#endif
+
 //main embedded mono code
 
 #ifndef FNADROID_DESKTOP
@@ -46,6 +56,9 @@ int fnadroid_boot() {
         return -1;
     }
 
+#ifdef TEST_AOTGEN
+    LOGI("fd_ag_gen(\"FNADroid-Lib.dll\") output: %i", fd_ag_gen("FNADroid-Lib.dll"));
+#endif
     fnadroid = mono_domain_assembly_open(domain, "FNADroid-Lib.dll");
     if (fnadroid) {
         //FNADroid-Lib.dll is a helper assembly containing helper code.
@@ -55,6 +68,9 @@ int fnadroid_boot() {
         LOGI("FNADroid-Lib.dll not found");
     }
 
+#ifdef TEST_AOTGEN
+    LOGI("fd_ag_domain_gen(domain, \"FNADroid-Boot.exe\") output: %i", fd_ag_domain_gen(domain, "FNADroid-Boot.exe"));
+#endif
     assembly = mono_domain_assembly_open(domain, "FNADroid-Boot.exe");
     if (!assembly) {
         LOGE("Assembly could not be loaded!");
